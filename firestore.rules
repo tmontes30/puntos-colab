@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Sesión iniciada y correo verificado (Google siempre lo está; correo/clave debe confirmar el enlace)
+    function signedIn() { return request.auth != null && request.auth.token.email_verified == true; }
+    function email() { return request.auth.token.email.lower(); }
+    function isOwner() { return signedIn() && email() == 'tmontes30@gmail.com'; }
+    function isAllowed() { return signedIn() && exists(/databases/$(database)/documents/allowlist/$(email())); }
+
+    // Datos de sellers y puntos: solo owner y correos autorizados pueden leer; solo owner escribe
+    match /dataset/{docId} {
+      allow read: if isOwner() || isAllowed();
+      allow write: if isOwner();
+    }
+
+    // Lista de acceso: la owner la gestiona; cada usuario solo puede consultar su propio registro
+    match /allowlist/{mail} {
+      allow get: if isOwner() || (signedIn() && mail == email());
+      allow list, write: if isOwner();
+    }
+
+    // Todo lo demás, cerrado
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

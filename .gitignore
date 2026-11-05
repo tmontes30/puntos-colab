@@ -1,0 +1,9 @@
+# Este repo es público: solo código. Nunca datos.
+*.xlsx
+*.xls
+*.csv
+datos*.json
+geocode_cache*
+*.log
+.firebase/
+firebase-debug.log

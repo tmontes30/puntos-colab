@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evaluador Puntos Dropoff</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0b0f17; --panel:#111722; --panel2:#171f2d; --ink:#e6eaf2; --muted:#8b95a7; --line:#232c3b; --line2:#1b2330;
+  --colab:#4c9aff; --ooll:#ffa94d; --fala:#9fd400; --fala-bg:#aad500;
+  --new:#a371f7; --off:#f25555; --low:#f5b83d; --accent:#9fd400;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font:13px/1.45 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+#app{display:flex;height:100%}
+#side{width:400px;min-width:400px;height:100%;overflow-y:auto;background:var(--panel);border-right:1px solid var(--line);scrollbar-color:#2a3446 transparent}
+#map{flex:1;height:100%;background:#0b0f17}
+header{display:flex;gap:12px;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(17,23,34,.92);backdrop-filter:blur(8px);z-index:5}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#c4ec1c,#7fb800);color:#0b0f17;font-weight:900;font-size:20px;display:grid;place-items:center;flex:none;box-shadow:0 0 18px rgba(170,213,0,.35)}
+h1{font-size:15px;margin:0;font-weight:650;letter-spacing:-.01em}
+#meta{margin:2px 0 0;color:var(--muted);font-size:11.5px}
+section{padding:14px 18px;border-bottom:1px solid var(--line)}
+h2{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:7px 0}
+.row label{flex:1}
+input[type=number],select,input[type=search]{padding:5px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--panel2);color:var(--ink);outline:none}
+input[type=number],select{width:115px}
+input[type=search]{width:100%;margin-top:6px;padding:7px 10px}
+input:focus,select:focus{border-color:var(--new);box-shadow:0 0 0 3px rgba(163,113,247,.2)}
+input[type=range]{width:100%;accent-color:var(--fala-bg)}
+input[type=checkbox]{accent-color:var(--fala-bg)}
+#radV{color:var(--fala-bg);font-variant-numeric:tabular-nums}
+.chk{display:flex;align-items:center;gap:7px;cursor:pointer}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.cnt{color:var(--muted);font-size:11.5px}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+button{font:inherit;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;color:var(--ink);transition:background .15s,border-color .15s}
+button:hover{background:#1f2938;border-color:#2f3a4d}
+button.primary{background:linear-gradient(135deg,#a371f7,#7c4ddb);border-color:transparent;color:#fff;font-weight:600;box-shadow:0 4px 14px rgba(163,113,247,.3)}
+button.primary:hover{filter:brightness(1.1)}
+button.on{background:rgba(163,113,247,.15);border-color:var(--new);color:#c9a8ff}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:10px 12px}
+.kpi b{display:block;font-size:19px;font-weight:650;font-variant-numeric:tabular-nums;margin:2px 0}
+.kpi span{color:var(--muted);font-size:11.5px}
+.kpi small{color:var(--muted);font-size:11px}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.chip{padding:3px 10px;border-radius:12px;border:1px solid var(--line);cursor:pointer;font-size:11.5px;background:var(--panel2);color:var(--muted)}
+.chip:hover{color:var(--ink)}
+.chip.act{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:5px 4px;border-bottom:1px solid var(--line);background:var(--panel)}
+#side th{position:sticky;top:69px}
+td{padding:6px 4px;border-bottom:1px solid var(--line2);vertical-align:top}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.click{cursor:pointer}
+tr.click:hover{background:#18202e}
+.st{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.st-ok{background:rgba(170,213,0,.14);color:#c4ec1c}.st-low{background:rgba(245,184,61,.15);color:#f5c45e}.st-off{background:rgba(242,85,85,.15);color:#ff8080}
+.st-new{background:rgba(163,113,247,.16);color:#c9a8ff}.st-man{background:rgba(163,113,247,.1);color:#c9a8ff;border:1px dashed var(--new)}
+.up{color:#9fd400}.dn{color:#ff7070}
+.note{color:var(--muted);font-size:11.5px;margin:8px 0 0}
+.warn{background:rgba(245,184,61,.1);border:1px solid rgba(245,184,61,.25);color:#f5d08a;border-radius:8px;padding:7px 9px;font-size:11.5px;margin-top:8px}
+#busy{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--new);color:#fff;padding:6px 16px;border-radius:16px;z-index:2000;display:none;box-shadow:0 4px 18px rgba(163,113,247,.45)}
+/* marcadores */
+.pin{display:grid;place-items:center;border-radius:50%;font-weight:900;color:#0b0f17;box-shadow:0 0 0 2px #0b0f17,0 0 14px rgba(170,213,0,.55);border:2px solid #e9ffb0}
+.pin-ok{background:var(--fala-bg)}
+.pin-low{background:var(--fala-bg);border:3px solid var(--low);box-shadow:0 0 0 2px #0b0f17,0 0 14px rgba(245,184,61,.6)}
+.pin-off{background:var(--off);color:#fff;border-color:#ffc2c2;box-shadow:0 0 0 2px #0b0f17,0 0 14px rgba(242,85,85,.6)}
+.pin-na{background:#5b6578;color:#e6eaf2;border-color:#8b95a7;box-shadow:none}
+.pin-new{background:var(--new);color:#fff;border-radius:6px;transform:rotate(45deg);border-color:#e2d1ff;box-shadow:0 0 0 2px #0b0f17,0 0 16px rgba(163,113,247,.7)}
+.pin-new i{transform:rotate(-45deg);font-style:normal}
+.pin-man{background:#0b0f17;color:#c9a8ff;border:3px dashed var(--new);border-radius:6px;box-shadow:0 0 14px rgba(163,113,247,.6)}
+.leaflet-container{background:#0b0f17;font:inherit}
+.leaflet-container.adding{cursor:crosshair}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel2);color:var(--ink);box-shadow:0 8px 28px rgba(0,0,0,.55);border:1px solid var(--line)}
+.leaflet-popup-content-wrapper{border-radius:12px}
+.leaflet-container a.leaflet-popup-close-button{color:var(--muted)}
+.leaflet-bar a,.leaflet-control-layers{background:var(--panel2);color:var(--ink);border-color:var(--line)!important}
+.leaflet-bar a:hover{background:#1f2938}
+.leaflet-control-layers-toggle{filter:invert(1) hue-rotate(180deg)}
+.leaflet-control-attribution{background:rgba(11,15,23,.7)!important;color:var(--muted)}
+.leaflet-control-attribution a{color:var(--muted)}
+.legend{background:rgba(23,31,45,.92);backdrop-filter:blur(6px);border:1px solid var(--line);color:var(--ink);padding:10px 12px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.45);font-size:11.5px;line-height:1.75}
+.legend .sw{display:inline-block;width:12px;height:12px;vertical-align:-2px;margin-right:7px;border-radius:50%}
+.cl{border:1px solid rgba(242,85,85,.3);background:rgba(242,85,85,.06);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.cl:hover{border-color:var(--off)}
+.cl-h{display:flex;justify-content:space-between;gap:8px}
+.cl-n{font-size:12px;color:var(--muted);margin:3px 0 6px}
+#side .cl th{background:transparent;position:static}
+.cl table td{padding:3px 4px;border-bottom:1px solid rgba(242,85,85,.12)}
+.pp h3{margin:0 0 5px;font-size:13.5px}
+.pp table{font-size:11.5px}
+.pp th{background:transparent}
+.pp td{padding:2px 4px}
+.pp .bd{max-height:150px;overflow:auto;margin-top:4px}
+.pp button{margin-top:4px}
+@media (max-width:800px){
+  #app{flex-direction:column;height:auto}
+  #side{width:100%;min-width:0;height:auto;border-right:0}
+  #map{height:75vh;flex:none}
+}
+
+#nav{height:46px;display:flex;align-items:center;gap:4px;padding:0 14px;background:#0b0f17;border-bottom:1px solid var(--line)}
+#nav .brand{display:flex;align-items:center;gap:8px;font-weight:650;margin-right:14px}
+#nav .brand .logo{width:26px;height:26px;font-size:14px;border-radius:7px}
+.tab{background:none;border:0;padding:7px 14px;border-radius:8px;color:var(--muted);font-weight:600;box-shadow:none}
+.tab:hover{background:var(--panel2);color:var(--ink)}
+.tab.act{background:var(--panel2);color:var(--ink);box-shadow:inset 0 -2px 0 var(--fala-bg)}
+#app{height:calc(100% - 46px)}
+#dash{height:calc(100% - 46px);overflow:auto;display:none;padding:20px 16px}
+.dwrap{max-width:1240px;margin:0 auto}
+.dctl{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:14px}
+.dctl label{color:var(--muted);font-size:12px;margin-right:6px}
+.dctl input[type=range]{width:220px;vertical-align:middle}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;vertical-align:middle}
+.seg button{border:0;border-radius:0;background:var(--panel2);padding:6px 11px;color:var(--muted)}
+.seg button.act{background:var(--ink);color:var(--bg)}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.dk{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.card h3{margin:0 0 2px;font-size:13.5px;font-weight:650}
+.card .sub{color:var(--muted);font-size:11.5px;margin-bottom:10px}
+.dk .card span{color:var(--muted);font-size:11.5px}
+.dk .card b{display:block;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;margin:2px 0}
+.dk .card small{color:var(--muted);font-size:11.5px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.ins{margin:0;padding-left:18px}
+.ins li{margin:7px 0;line-height:1.5}
+.ins b{color:#fff}
+.chart{position:relative}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.gl{stroke:#232c3b;stroke-width:1}
+.axl{stroke:#3a4558;stroke-width:1}
+.ax{fill:#8b95a7;font-size:10.5px;font-family:inherit}
+.tt{position:absolute;pointer-events:none;background:#0b0f17;border:1px solid #2f3a4d;border-radius:8px;padding:7px 9px;font-size:11.5px;display:none;white-space:nowrap;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.tt i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+.lg{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-bottom:6px;flex-wrap:wrap}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.dt td,.dt th{padding:6px 6px}
+.dt th{position:static}
+.bar{height:6px;border-radius:3px;background:var(--fala-bg);opacity:.85;min-width:2px}
+@media (max-width:900px){.dk{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}#app{height:auto}}
+</style>
+</head>
+<body>
+<div id="busy">Calculando…</div>
+<nav id="nav">
+  <div class="brand"><div class="logo">F</div>Red Puntos Colab</div>
+  <button class="tab act" data-tab="map">Mapa</button>
+  <button class="tab" data-tab="dash">Distancia sellers</button>
+</nav>
+<div id="app">
+<aside id="side">
+  <header>
+    <div class="logo">F</div>
+    <div><h1>Evaluador de puntos dropoff</h1><p id="meta"></p></div>
+  </header>
+
+  <section>
+    <h2>Sellers</h2>
+    <div class="row"><label class="chk"><input type="checkbox" id="chkC" checked><span class="dot" style="background:var(--colab)"></span>Punto Colab</label><span class="cnt" id="cntC"></span></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="chkO" checked><span class="dot" style="background:var(--ooll)"></span>OOLL (migrables a la red)</label><span class="cnt" id="cntO"></span></div>
+    <div class="row"><label for="selProv">Provincia</label><select id="selProv"><option value="">Todas</option></select></div>
+    <div class="row"><label for="minV">Venta día mínima por seller</label><input type="number" id="minV" value="0" min="0" step="0.5"></div>
+    <input type="search" id="q" placeholder="Buscar seller o punto (ID o nombre) y Enter">
+  </section>
+
+  <section>
+    <h2>Cobertura</h2>
+    <div class="row"><label for="rad">Radio de cobertura</label><b id="radV"></b></div>
+    <input type="range" id="rad" min="0.5" max="10" step="0.5" value="1.5">
+    <div class="row"><label for="minQ">Mínimo pedidos/día por punto</label><input type="number" id="minQ" value="15" min="0" step="1"></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="chkCirc" checked>Mostrar radio de cada punto</label></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="chkNA">Mostrar puntos no operativos</label></div>
+    <p class="note">Cada seller va al punto activo más cercano dentro del radio (línea recta). Si no hay ninguno, queda sin cobertura.</p>
+  </section>
+
+  <section>
+    <h2>Puntos potenciales</h2>
+    <div class="row"><label for="crit">Elegir el punto que capture más</label><select id="crit"><option value="sellers">Sellers</option><option value="pedidos">Pedidos/día</option></select></div>
+    <div class="row"><label for="mode">Sellers que puede captar</label><select id="mode"><option value="all">Más cercanos (puede quitar a otros puntos)</option><option value="unc">Solo sin cobertura</option></select></div>
+    <div class="row"><label for="maxN">Máximo de puntos nuevos</label><input type="number" id="maxN" value="10" min="1" step="1"></div>
+    <div class="row"><label for="minSep">Distancia mínima a otro punto (km)</label><input type="number" id="minSep" value="1" min="0" step="0.1"></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="dropBelow">Deshabilitar desde ya los puntos bajo el mínimo hoy</label></div>
+    <div class="btns">
+      <button class="primary" id="bProp">Proponer puntos</button>
+      <button id="bAdd">+ Punto manual (clic en mapa)</button>
+      <button id="bClear">Limpiar</button>
+    </div>
+    <p class="note">Candidatos = ubicación de bodegas de sellers. Se agrega de a un punto (el que más capta con ≥ mínimo); tras cada uno, los puntos actuales que caen bajo el mínimo por perder sellers se marcan para deshabilitar y sus sellers se reasignan.</p>
+  </section>
+
+  <section>
+    <h2>Resultado</h2>
+    <div class="kpis" id="kpis"></div>
+    <div id="warnBox"></div>
+  </section>
+
+  <section id="closeSec" style="display:none">
+    <h2>Puntos que se cerrarían</h2>
+    <div id="closeList"></div>
+  </section>
+
+  <section>
+    <h2>Puntos</h2>
+    <div class="chips" id="chips"></div>
+    <table><thead><tr><th>Punto</th><th>Estado</th><th class="n">Sellers</th><th class="n">Pedidos/día</th></tr></thead><tbody id="tb"></tbody></table>
+    <div class="btns">
+      <button id="bCsvP">Exportar puntos (CSV)</button>
+      <button id="bCsvS">Exportar asignación sellers (CSV)</button>
+    </div>
+  </section>
+</aside>
+<div id="map"></div>
+</div>
+
+<div id="dash"><div class="dwrap">
+  <div class="dctl">
+    <span><label>Radio</label><input type="range" id="dRad" min="0.5" max="10" step="0.5"> <b id="dRadV" style="color:var(--fala-bg)"></b></span>
+    <span><label>Sellers</label><span class="seg" id="dTipo"><button data-v="all" class="act">Todos</button><button data-v="C">Punto Colab</button><button data-v="O">OOLL</button></span></span>
+    <span><label>Red</label><span class="seg" id="dRed"><button data-v="act" class="act">Puntos actuales</button><button data-v="new">+ propuestos</button></span></span>
+    <span class="cnt" id="dInfo"></span>
+  </div>
+  <div class="dk" id="dKpis"></div>
+  <div class="card" style="margin-bottom:14px"><h3>Insights</h3><div class="sub">Se recalculan con el radio y los filtros de arriba</div><ul class="ins" id="dIns"></ul></div>
+  <div class="g2">
+    <div class="card"><h3>Cobertura de pedidos según radio</h3><div class="sub">% de pedidos/día con un punto a esa distancia o menos</div><div class="lg" id="lgCurve"></div><div class="chart" id="chCurve"></div></div>
+    <div class="card"><h3>Distancia al punto más cercano</h3><div class="sub">Pedidos/día por tramo de 0,5 km · los tramos fuera del radio van atenuados</div><div class="lg" id="lgHist"></div><div class="chart" id="chHist"></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><h3>Puntos que cumplen el mínimo según radio</h3><div class="sub" id="subPts"></div><div class="chart" id="chPts"></div></div>
+    <div class="card"><h3>Comunas con más pedidos fuera del radio</h3><div class="sub">Dónde conviene buscar puntos nuevos</div>
+      <table class="dt"><thead><tr><th>Comuna</th><th class="n">Sellers</th><th class="n">Ped/día</th><th class="n">Dist. mediana</th><th style="width:28%"></th></tr></thead><tbody id="dCom"></tbody></table></div>
+  </div>
+  <div class="card"><h3>Sellers grandes fuera del radio</h3><div class="sub">Ordenados por pedidos/día · un seller con ≥ mínimo podría ser punto propio</div>
+    <table class="dt"><thead><tr><th>Seller</th><th>Tipo</th><th>Comuna</th><th class="n">Ped/día</th><th class="n">Km al punto más cercano</th><th>Punto más cercano</th></tr></thead><tbody id="dBig"></tbody></table></div>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+window.startApp=function(DATA){
+if(!DATA)return;
+
+/* ---------- utilidades ---------- */
+const $=id=>document.getElementById(id);
+const KX=111.32*Math.cos(33.45*Math.PI/180), KY=110.574;
+const dkm=(a,b,c,d)=>{const x=(b-d)*KX,y=(a-c)*KY;return Math.sqrt(x*x+y*y)};
+const nf1=new Intl.NumberFormat('es-CL',{maximumFractionDigits:1,minimumFractionDigits:1});
+const nf0=new Intl.NumberFormat('es-CL',{maximumFractionDigits:0});
+const f1=v=>nf1.format(v), f0=v=>nf0.format(v);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pct=(a,b)=>b?Math.round(a/b*100)+'%':'–';
+const P=()=>({R:+$('rad').value,MIN:+$('minQ').value||0,crit:$('crit').value,mode:$('mode').value,
+  maxN:Math.max(1,+$('maxN').value||1),minSep:+$('minSep').value||0,drop:$('dropBelow').checked});
+
+/* ---------- datos ---------- */
+const ALL=DATA.sellers;
+const LOC=ALL.filter(s=>s.lat!=null);
+const PTS=DATA.puntos.map(p=>({...p,kind:'exist',na:/^\s*no\b/i.test(p.act),closed:/cerrad/i.test(p.act)}));
+const EX=PTS.filter(p=>p.lat!=null&&!p.na);           // puntos actuales que participan
+const NA=PTS.filter(p=>p.lat!=null&&p.na);
+const NOLOC=PTS.filter(p=>p.lat==null);
+$('meta').textContent=`${f0(LOC.length)} de ${f0(ALL.length)} sellers ubicados · ${EX.length} puntos activos · datos ${DATA.generado}`;
+const provs=[...new Set(ALL.map(s=>s.r))].sort();
+provs.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;$('selProv').appendChild(o)});
+
+/* ---------- mapa ---------- */
+const map=L.map('map',{preferCanvas:true}).setView([-33.45,-70.65],11);
+const dark=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:16,attribution:'Tiles &copy; Esri'});
+const darkRef=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',{maxZoom:16,opacity:.7});
+const gray=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:16,attribution:'Tiles &copy; Esri'});
+const street=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles &copy; Esri'}).addTo(map);
+const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'});
+L.control.layers({'Oscuro':dark,'Gris claro':gray,'Calles':street,'OpenStreetMap':osm},{'Nombres de comunas':darkRef},{position:'topright'}).addTo(map);
+const rend=L.canvas({padding:.3});
+const sellerLayer=L.layerGroup().addTo(map);
+const circLayer=L.layerGroup().addTo(map);
+const lineLayer=L.layerGroup().addTo(map);
+const ptLayer=L.layerGroup().addTo(map);
+const legend=L.control({position:'bottomright'});
+legend.onAdd=()=>{const d=L.DomUtil.create('div','legend');d.innerHTML=
+ `<div><span class="sw" style="background:var(--colab)"></span>Seller Punto Colab</div>
+  <div><span class="sw" style="background:var(--ooll)"></span>Seller OOLL</div>
+  <div><span class="sw" style="background:transparent;border:2px solid #8b95a7"></span>Seller sin cobertura (claro)</div>
+  <div><span class="sw" style="background:var(--fala-bg)"></span>Punto colab ≥ mínimo</div>
+  <div><span class="sw" style="background:var(--fala-bg);border:3px solid var(--low)"></span>Punto bajo mínimo hoy</div>
+  <div><span class="sw" style="background:var(--off)"></span>Punto a deshabilitar</div>
+  <div><span class="sw" style="background:var(--new);border-radius:3px"></span>Punto potencial nuevo</div>
+  <div><span class="sw" style="background:transparent;border:2px dashed var(--new);border-radius:3px"></span>Punto manual</div>`;return d};
+legend.addTo(map);
+
+LOC.forEach(s=>{
+  s._m=L.circleMarker([s.lat,s.lon],{renderer:rend,radius:2.5+Math.min(9,Math.sqrt(s.v)*1.6),weight:1,
+    color:s.t==='O'?'#ffc98a':'#a9cdff',fillColor:s.t==='O'?'#ffa94d':'#4c9aff',fillOpacity:.8,opacity:.9});
+  s._m.on('click',e=>{L.popup({maxWidth:320}).setLatLng(e.latlng).setContent(sellerPopup(s)).openOn(map)});
+});
+
+/* ---------- estado ---------- */
+let F=[];            // sellers filtrados y ubicados
+let base=null;       // asignación hoy (solo puntos actuales)
+let sc=null;         // escenario
+let newPts=[];       // puntos nuevos (propuestos y manuales)
+let proposed=false, addMode=false, selected=null, tableFilter='all', nMan=0;
+
+function filterSellers(){
+  const c=$('chkC').checked,o=$('chkO').checked,pv=$('selProv').value,mv=+$('minV').value||0;
+  const ok=s=>((s.t==='C'&&c)||(s.t==='O'&&o))&&(!pv||s.r===pv)&&s.v>=mv;
+  F=LOC.filter(ok);
+  LOC.forEach(s=>s._i=-1); F.forEach((s,i)=>s._i=i);
+  sellerLayer.clearLayers(); F.forEach(s=>sellerLayer.addLayer(s._m));
+  const unl=ALL.filter(s=>s.lat==null&&ok(s));
+  return {unlN:unl.length,unlV:unl.reduce((a,s)=>a+s.v,0)};
+}
+
+function assign(pts,alive,R){
+  const n=F.length,pt=new Int32Array(n).fill(-1),d=new Float64Array(n).fill(Infinity);
+  const dLat=R/KY,dLon=R/KX;
+  for(let i=0;i<n;i++){const s=F[i];let bd=Infinity,bj=-1;
+    for(let j=0;j<pts.length;j++){if(alive&&!alive[j])continue;const p=pts[j];
+      if(Math.abs(p.lat-s.lat)>dLat||Math.abs(p.lon-s.lon)>dLon)continue;
+      const x=dkm(s.lat,s.lon,p.lat,p.lon);if(x<=R&&x<bd){bd=x;bj=j}}
+    pt[i]=bj;d[i]=bd}
+  const load=new Float64Array(pts.length),cnt=new Int32Array(pts.length);
+  for(let i=0;i<n;i++){const j=pt[i];if(j>=0){load[j]+=F[i].v;cnt[j]++}}
+  return {pt,d,load,cnt};
+}
+
+/* Escenario: puntos actuales + nuevos, con deshabilitación en cascada */
+function runScenario(list){
+  const {R,MIN,drop}=P();
+  const pts=EX.concat(list),alive=pts.map(()=>true),reason=pts.map(()=>null);
+  if(drop) EX.forEach((p,j)=>{if(base.load[j]<MIN){alive[j]=false;reason[j]='bajo-hoy'}});
+  let a;
+  for(;;){
+    a=assign(pts,alive,R);let worst=-1,wl=Infinity;
+    for(let j=0;j<pts.length;j++){
+      if(!alive[j]||a.load[j]>=MIN)continue;
+      if(j<EX.length){if(base.load[j]<MIN)continue}            // ya estaba bajo el mínimo: no es por canibalización
+      else if(pts[j].kind==='manual')continue;                  // los manuales nunca se quitan solos
+      if(a.load[j]<wl){wl=a.load[j];worst=j}
+    }
+    if(worst<0)break;
+    alive[worst]=false;reason[worst]=worst<EX.length?'canibalizado':'descartado';
+  }
+  return {pts,alive,reason,...a};
+}
+
+function buildGrid(R){const g=new Map();
+  F.forEach((s,i)=>{const k=Math.floor(s.lat*KY/R)+','+Math.floor(s.lon*KX/R);let b=g.get(k);if(!b)g.set(k,b=[]);b.push(i)});return g}
+function forNear(g,R,lat,lon,fn){const ix=Math.floor(lat*KY/R),iy=Math.floor(lon*KX/R);
+  for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const bk=g.get((ix+a)+','+(iy+b));if(!bk)continue;
+    for(const i of bk){const s=F[i],d=dkm(lat,lon,s.lat,s.lon);if(d<=R)fn(i,d)}}}
+function buildCands(R){
+  const cell=Math.max(.15,R/10),m=new Map();
+  F.forEach(s=>{const k=Math.floor(s.lat*KY/cell)+','+Math.floor(s.lon*KX/cell);const c=m.get(k);if(!c||s.v>c.v)m.set(k,s)});
+  return [...m.values()].map(s=>({lat:s.lat,lon:s.lon,host:s}));
+}
+
+function propose(){
+  const {R,MIN,crit,mode,maxN,minSep}=P();
+  let list=newPts.filter(p=>p.kind==='manual');
+  let s=runScenario(list);
+  const g=buildGrid(R),cands=buildCands(R);
+  let k=0;
+  while(k<maxN){
+    const live=s.pts.filter((p,j)=>s.alive[j]);
+    let best=null;
+    for(const c of cands){
+      if(c.used)continue;
+      let near=false;for(const p of live){if(dkm(c.lat,c.lon,p.lat,p.lon)<minSep){near=true;break}}if(near)continue;
+      let gN=0,gV=0;
+      forNear(g,R,c.lat,c.lon,(i,d)=>{if(d<s.d[i]&&(mode==='all'||s.pt[i]<0)){gN++;gV+=F[i].v}});
+      if(gV<MIN||gN===0)continue;
+      const better=!best||(crit==='sellers'?(gN>best.gN||(gN===best.gN&&gV>best.gV)):(gV>best.gV||(gV===best.gV&&gN>best.gN)));
+      if(better)best={c,gN,gV};
+    }
+    if(!best)break;
+    best.c.used=true;k++;
+    list.push({kind:'prop',lat:best.c.lat,lon:best.c.lon,host:best.c.host,estN:best.gN,estV:best.gV});
+    s=runScenario(list);
+    const keep=list.filter((p,idx)=>p.kind==='manual'||s.alive[EX.length+idx]);
+    if(keep.length!==list.length){list=keep;s=runScenario(list)}
+  }
+  let n=0;list.forEach(p=>{if(p.kind==='prop'){p.id='N'+(++n);p.n='Potencial '+n}});
+  newPts=list;proposed=true;
+}
+
+/* ---------- ciclo principal ---------- */
+let unl={unlN:0,unlV:0};
+function recompute(repropose){
+  showBusy(true);
+  setTimeout(()=>{
+    unl=filterSellers();
+    const {R}=P();
+    base=assign(EX,null,R);
+    if(repropose&&proposed)propose();
+    sc=runScenario(newPts);
+    render();showBusy(false);
+  },20);
+}
+function showBusy(b){$('busy').style.display=b?'block':'none'}
+
+/* ---------- estado de cada punto ---------- */
+function status(j){
+  const {MIN}=P(),p=sc.pts[j];
+  if(j>=EX.length) return p.kind==='manual'?{k:'man',t:sc.load[j]>=MIN?'Manual':'Manual · bajo mínimo',c:'st-man'}:{k:'new',t:'Nuevo',c:'st-new'};
+  if(!sc.alive[j]) return sc.reason[j]==='bajo-hoy'?{k:'off',t:'Deshabilitar (bajo mín. hoy)',c:'st-off'}:{k:'off',t:'Deshabilitar',c:'st-off'};
+  if(sc.load[j]<MIN) return {k:'low',t:'Bajo mínimo',c:'st-low'};
+  return {k:'ok',t:'OK',c:'st-ok'};
+}
+function ptName(j){return j<0?'Sin cobertura':(sc.pts[j].id+' · '+sc.pts[j].n)}
+
+function iconFor(j){
+  const st=status(j),p=sc.pts[j];
+  if(st.k==='new')return L.divIcon({className:'',html:`<div class="pin pin-new" style="width:26px;height:26px;font-size:11px"><i>${esc(p.id.slice(1))}</i></div>`,iconSize:[26,26],iconAnchor:[13,13]});
+  if(st.k==='man')return L.divIcon({className:'',html:`<div class="pin pin-man" style="width:26px;height:26px;font-size:11px">${esc(p.id)}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
+  const cls=st.k==='off'?'pin-off':st.k==='low'?'pin-low':'pin-ok';
+  return L.divIcon({className:'',html:`<div class="pin ${cls}" style="width:30px;height:30px;font-size:16px">${st.k==='off'?'✕':'F'}</div>`,iconSize:[30,30],iconAnchor:[15,15]});
+}
+
+/* ---------- render ---------- */
+function render(){
+  const {R,MIN}=P();
+  // sellers: claros si no tienen cobertura en el escenario
+  F.forEach((s,i)=>{const cov=sc.pt[i]>=0;s._m.setStyle({fillOpacity:cov?.85:.18,opacity:cov?.9:.45})});
+  // radios y puntos
+  circLayer.clearLayers();ptLayer.clearLayers();
+  sc.pts.forEach((p,j)=>{
+    const st=status(j);
+    if($('chkCirc').checked&&sc.alive[j]){
+      const isNew=j>=EX.length;
+      L.circle([p.lat,p.lon],{radius:R*1000,weight:1,color:isNew?'#a371f7':'#9fd400',fillColor:isNew?'#a371f7':'#aad500',fillOpacity:.05,opacity:.55,dashArray:isNew?'4 4':null,interactive:false}).addTo(circLayer);
+    }
+    const m=L.marker([p.lat,p.lon],{icon:iconFor(j),zIndexOffset:st.k==='new'||st.k==='man'?1000:st.k==='off'?500:0});
+    m.on('click',()=>{select(j);L.popup({maxWidth:340}).setLatLng([p.lat,p.lon]).setContent(pointPopup(j)).openOn(map)});
+    m.addTo(ptLayer);
+  });
+  if($('chkNA').checked) NA.forEach(p=>L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:'<div class="pin pin-na" style="width:22px;height:22px;font-size:11px">F</div>',iconSize:[22,22],iconAnchor:[11,11]})})
+    .bindPopup(`<div class="pp"><h3>${esc(p.id)} · ${esc(p.n)}</h3>${esc(p.d)}, ${esc(p.c)}<br><b>${esc(p.act)}</b> — no se considera en los cálculos</div>`).addTo(ptLayer));
+  drawLines();
+  renderKpis();renderClosures();renderTable();
+  $('cntC').textContent=f0(F.filter(s=>s.t==='C').length)+' en mapa';
+  $('cntO').textContent=f0(F.filter(s=>s.t==='O').length)+' en mapa';
+}
+
+function select(j){selected=j;drawLines()}
+function drawLines(){
+  lineLayer.clearLayers();if(selected==null||!sc||selected>=sc.pts.length)return;
+  const p=sc.pts[selected],useBase=selected<EX.length&&!sc.alive[selected];
+  F.forEach((s,i)=>{const a=useBase?base.pt[i]:sc.pt[i];if(a===selected)
+    L.polyline([[p.lat,p.lon],[s.lat,s.lon]],{weight:1,color:useBase?'#f25555':'#e6eaf2',opacity:.35,interactive:false}).addTo(lineLayer)});
+}
+
+function renderKpis(){
+  const {MIN}=P();
+  const totV=F.reduce((a,s)=>a+s.v,0);
+  let bN=0,bV=0,sN=0,sV=0;
+  F.forEach((s,i)=>{if(base.pt[i]>=0){bN++;bV+=s.v}if(sc.pt[i]>=0){sN++;sV+=s.v}});
+  let ok=0,low=0,off=0,nw=0,nwV=0,lowToday=0;
+  sc.pts.forEach((p,j)=>{const k=status(j).k;if(k==='ok')ok++;else if(k==='low')low++;else if(k==='off')off++;else{nw++;nwV+=sc.load[j]}});
+  EX.forEach((p,j)=>{if(base.load[j]<MIN)lowToday++});
+  const arrow=(a,b)=>a===b?'':` → ${b}`;
+  $('kpis').innerHTML=`
+   <div class="kpi"><span>Sellers con cobertura</span><b>${pct(bN,F.length)}${arrow(pct(bN,F.length),pct(sN,F.length))}</b><small>${f0(sN)} de ${f0(F.length)} sellers</small></div>
+   <div class="kpi"><span>Pedidos/día cubiertos</span><b>${pct(bV,totV)}${arrow(pct(bV,totV),pct(sV,totV))}</b><small>${f0(sV)} de ${f0(totV)} pedidos/día</small></div>
+   <div class="kpi"><span>Puntos actuales ≥ ${MIN}</span><b>${ok}</b><small>${lowToday} bajo el mínimo hoy · ${low} en el escenario</small></div>
+   <div class="kpi"><span>Puntos a deshabilitar</span><b style="color:var(--off)">${off}</b><small>de ${EX.length} activos</small></div>
+   <div class="kpi"><span>Puntos nuevos</span><b style="color:var(--new)">${nw}</b><small>${f0(nwV)} pedidos/día captados</small></div>
+   <div class="kpi"><span>Sellers sin ubicar</span><b>${f0(unl.unlN)}</b><small>${f0(unl.unlV)} pedidos/día fuera del análisis</small></div>`;
+  let w='';
+  if(NOLOC.length)w+=`<div class="warn">Puntos sin ubicar (no están en el mapa): ${NOLOC.map(p=>esc(p.id)).join(', ')}</div>`;
+  if(PTS.some(p=>p.closed))w+=`<div class="warn">Con cierre temporal: ${PTS.filter(p=>p.closed).map(p=>esc(p.id)+' ('+esc(p.act)+')').join(', ')}</div>`;
+  $('warnBox').innerHTML=w;
+}
+
+/* Destino de los sellers de un punto que se cierra: [{k, n, v}] ordenado por pedidos */
+function destinos(j){
+  const g=new Map();
+  F.forEach((s,i)=>{if(base.pt[i]!==j)return;const k=sc.pt[i];const o=g.get(k)||{k,n:0,v:0};o.n++;o.v+=s.v;g.set(k,o)});
+  return [...g.values()].sort((a,b)=>b.v-a.v);
+}
+function renderClosures(){
+  const off=EX.map((p,j)=>j).filter(j=>!sc.alive[j]).sort((a,b)=>base.load[b]-base.load[a]);
+  $('closeSec').style.display=off.length?'':'none';
+  $('closeList').innerHTML=off.map(j=>{const p=EX[j];
+    const motivo=sc.reason[j]==='bajo-hoy'?'Ya estaba bajo el mínimo hoy':'Queda bajo el mínimo al perder sellers';
+    const rows=destinos(j).map(o=>`<tr><td>${o.k<0?'<span class="dn">Sin cobertura</span>':esc(sc.pts[o.k].id)+' · '+esc(sc.pts[o.k].n)}</td><td class="n">${o.n}</td><td class="n">${f1(o.v)}</td></tr>`).join('');
+    return `<div class="cl" data-j="${j}"><div class="cl-h"><b>${esc(p.id)} · ${esc(p.n)}</b><span class="st st-off">Cerrar</span></div>
+      <div class="cl-n">${esc(p.d)}, ${esc(p.c)} · ${motivo}<br>Hoy: <b>${base.cnt[j]}</b> sellers · <b>${f1(base.load[j])}</b> pedidos/día</div>
+      ${rows?`<table><tr><th>Sus sellers se van a</th><th class="n">Sellers</th><th class="n">Ped/día</th></tr>${rows}</table>`:'<div class="cl-n">Hoy no tiene sellers asignados</div>'}</div>`}).join('');
+}
+$('closeList').addEventListener('click',e=>{const c=e.target.closest('.cl[data-j]');if(!c)return;const j=+c.dataset.j,p=sc.pts[j];
+  map.setView([p.lat,p.lon],Math.max(map.getZoom(),13));select(j);L.popup({maxWidth:340}).setLatLng([p.lat,p.lon]).setContent(pointPopup(j)).openOn(map)});
+
+function rowsData(){
+  return sc.pts.map((p,j)=>{const st=status(j),isEx=j<EX.length;
+    return {j,p,st,bN:isEx?base.cnt[j]:null,bV:isEx?base.load[j]:null,sN:sc.alive[j]?sc.cnt[j]:0,sV:sc.alive[j]?sc.load[j]:0}});
+}
+const FILT={all:['Todos',()=>true],new:['Nuevos',r=>r.st.k==='new'||r.st.k==='man'],off:['A deshabilitar',r=>r.st.k==='off'],low:['Bajo mínimo',r=>r.st.k==='low'],ok:['OK',r=>r.st.k==='ok']};
+function renderTable(){
+  const rows=rowsData();
+  $('chips').innerHTML=Object.entries(FILT).map(([k,[t,fn]])=>`<span class="chip ${k===tableFilter?'act':''}" data-f="${k}">${t} (${rows.filter(fn).length})</span>`).join('');
+  const ord={new:0,man:0,off:1,low:2,ok:3};
+  const list=rows.filter(FILT[tableFilter][1]).sort((a,b)=>ord[a.st.k]-ord[b.st.k]||b.sV-a.sV||(b.bV??0)-(a.bV??0));
+  const delta=(a,b)=>{if(a==null)return'';const d=b-a;if(Math.abs(d)<.05)return'';return ` <span class="${d>0?'up':'dn'}">(${d>0?'+':''}${f1(d)})</span>`};
+  $('tb').innerHTML=list.map(r=>`<tr class="click" data-j="${r.j}"><td><b>${esc(r.p.id)}</b> ${esc(r.p.n)}</td><td><span class="st ${r.st.c}">${r.st.t}</span></td>
+    <td class="n">${r.bN==null?'':f0(r.bN)+' → '}${f0(r.sN)}</td><td class="n">${r.bV==null?'':f1(r.bV)+' → '}<b>${f1(r.sV)}</b>${delta(r.bV,r.sV)}</td></tr>`).join('')
+    ||'<tr><td colspan="4" class="note">Sin puntos en esta vista</td></tr>';
+}
+$('chips').addEventListener('click',e=>{const f=e.target.dataset.f;if(f){tableFilter=f;renderTable()}});
+$('tb').addEventListener('click',e=>{const tr=e.target.closest('tr[data-j]');if(!tr)return;const j=+tr.dataset.j,p=sc.pts[j];
+  map.setView([p.lat,p.lon],Math.max(map.getZoom(),13));select(j);L.popup({maxWidth:340}).setLatLng([p.lat,p.lon]).setContent(pointPopup(j)).openOn(map)});
+
+/* ---------- popups ---------- */
+function breakdown(fromArr,toArr,j,label){
+  const g=new Map();
+  F.forEach((s,i)=>{if(fromArr[i]!==j)return;const k=toArr[i];const o=g.get(k)||{n:0,v:0};o.n++;o.v+=s.v;g.set(k,o)});
+  if(!g.size)return'';
+  const rows=[...g.entries()].sort((a,b)=>b[1].v-a[1].v).map(([k,o])=>`<tr><td>${esc(label(k))}</td><td class="n">${o.n}</td><td class="n">${f1(o.v)}</td></tr>`).join('');
+  return `<div class="bd"><table><tr><th></th><th class="n">Sellers</th><th class="n">Ped/día</th></tr>${rows}</table></div>`;
+}
+function pointPopup(j){
+  const p=sc.pts[j],st=status(j),isEx=j<EX.length;
+  let h=`<div class="pp"><h3>${esc(p.id)} · ${esc(p.n)}</h3><span class="st ${st.c}">${st.t}</span><br>`;
+  if(isEx){
+    h+=`${esc(p.d)}, ${esc(p.c)}${p.ref?' · '+esc(p.ref):''}<br>L-V ${esc(p.hlv)}${p.hs?' · Sáb '+esc(p.hs):''}${p.closed?'<br><b>'+esc(p.act)+'</b>':''}
+      <table><tr><td></td><td class="n">Hoy</td><td class="n">Escenario</td></tr>
+      <tr><td>Sellers</td><td class="n">${base.cnt[j]}</td><td class="n">${sc.alive[j]?sc.cnt[j]:0}</td></tr>
+      <tr><td>Pedidos/día</td><td class="n">${f1(base.load[j])}</td><td class="n"><b>${f1(sc.alive[j]?sc.load[j]:0)}</b></td></tr></table>`;
+    if(!sc.alive[j]) h+=`<b>Dónde van sus sellers:</b>`+breakdown(base.pt,sc.pt,j,ptName);
+    else if(sc.load[j]+1e-9<base.load[j]) h+=`<b>Sellers que pierde, van a:</b>`+breakdownLost(j);
+  }else{
+    h+=p.kind==='prop'?`Bodega de: <b>${esc(p.host.n)}</b> (${esc(p.host.id)})<br>${esc(p.host.d)}, ${esc(p.host.c)}<br>`:'Ubicación elegida en el mapa<br>';
+    h+=`<b>${sc.cnt[j]}</b> sellers · <b>${f1(sc.load[j])}</b> pedidos/día<br><b>De dónde vienen:</b>`+breakdown(sc.pt,base.pt,j,k=>k<0?'Sin cobertura hoy':EX[k].id+' · '+EX[k].n);
+    h+=`<div class="btns"><button onclick="APP.removePt(${j})">Quitar este punto</button></div>`;
+  }
+  return h+'</div>';
+}
+function breakdownLost(j){
+  const g=new Map();
+  F.forEach((s,i)=>{if(base.pt[i]!==j||sc.pt[i]===j)return;const k=sc.pt[i];const o=g.get(k)||{n:0,v:0};o.n++;o.v+=s.v;g.set(k,o)});
+  return `<div class="bd"><table>${[...g.entries()].sort((a,b)=>b[1].v-a[1].v).map(([k,o])=>`<tr><td>${esc(ptName(k))}</td><td class="n">${o.n}</td><td class="n">${f1(o.v)}</td></tr>`).join('')}</table></div>`;
+}
+function sellerPopup(s){
+  const i=s._i;let h=`<div class="pp"><h3>${esc(s.n)}</h3>${esc(s.id)} · <b>${s.t==='O'?'OOLL':'Punto Colab'}</b><br>${esc(s.d)}, ${esc(s.c)}<br>Venta día: <b>${f1(s.v)}</b>`;
+  h+=s.h?'':' <span class="cnt">· ubicado a nivel calle (sin número)</span>';
+  if(i>=0&&sc){const b=base.pt[i],e=sc.pt[i];
+    h+=`<br>Punto hoy: ${b<0?'sin cobertura':esc(EX[b].id+' · '+EX[b].n)+' ('+f1(base.d[i])+' km)'}`;
+    if(e!==b)h+=`<br>Punto escenario: <b>${e<0?'sin cobertura':esc(ptName(e))+' ('+f1(sc.d[i])+' km)'}</b>`;}
+  return h+'</div>';
+}
+
+/* ---------- acciones ---------- */
+window.APP={removePt(j){const p=sc.pts[j];newPts=newPts.filter(x=>x!==p);map.closePopup();selected=null;
+  // renumerar propuestos
+  let n=0;newPts.forEach(x=>{if(x.kind==='prop'){x.id='N'+(++n);x.n='Potencial '+n}});
+  recompute(false)}};
+
+$('bProp').onclick=()=>{proposed=true;selected=null;recompute(true)};
+$('bClear').onclick=()=>{newPts=[];proposed=false;selected=null;nMan=0;map.closePopup();recompute(false)};
+$('bAdd').onclick=()=>{addMode=!addMode;$('bAdd').classList.toggle('on',addMode);map.getContainer().classList.toggle('adding',addMode)};
+map.on('click',e=>{if(!addMode)return;nMan++;
+  newPts.push({kind:'manual',id:'M'+nMan,n:'Manual '+nMan,lat:e.latlng.lat,lon:e.latlng.lng});
+  addMode=false;$('bAdd').classList.remove('on');map.getContainer().classList.remove('adding');
+  selected=null;recompute(proposed)});
+
+let tmr;const deb=fn=>{clearTimeout(tmr);tmr=setTimeout(fn,250)};
+$('rad').addEventListener('input',()=>{$('radV').textContent=f1(+$('rad').value)+' km';deb(()=>recompute(true))});
+['chkC','chkO','selProv','minV','minQ','crit','mode','maxN','minSep','dropBelow'].forEach(id=>$(id).addEventListener('change',()=>{selected=null;recompute(true)}));
+['chkCirc','chkNA'].forEach(id=>$(id).addEventListener('change',render));
+$('radV').textContent=f1(+$('rad').value)+' km';
+
+$('q').addEventListener('keydown',e=>{if(e.key!=='Enter')return;const t=e.target.value.trim().toLowerCase();if(!t)return;
+  const j=sc.pts.findIndex(p=>p.id.toLowerCase()===t||(p.n||'').toLowerCase().includes(t));
+  if(j>=0){const p=sc.pts[j];map.setView([p.lat,p.lon],14);select(j);L.popup().setLatLng([p.lat,p.lon]).setContent(pointPopup(j)).openOn(map);return}
+  const s=LOC.find(s=>s.id.toLowerCase()===t)||LOC.find(s=>s.n.toLowerCase().includes(t));
+  if(s){map.setView([s.lat,s.lon],15);L.popup().setLatLng([s.lat,s.lon]).setContent(sellerPopup(s)).openOn(map);return}
+  const u=ALL.find(s=>s.id.toLowerCase()===t||s.n.toLowerCase().includes(t));
+  alert(u?`"${u.n}" no se pudo ubicar en el mapa (dirección: ${u.d}).`:'No se encontró.');});
+
+/* ---------- CSV ---------- */
+const num=v=>v==null?'':String(Math.round(v*100)/100).replace('.',',');
+const crd=v=>v==null?'':v.toFixed(6).replace('.',',');
+const cell=v=>{const s=String(v??'');return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+function download(name,rows){const txt='﻿'+rows.map(r=>r.map(cell).join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/csv;charset=utf-8'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+$('bCsvP').onclick=()=>{const {R,MIN}=P();
+  download(`puntos_escenario_r${R}km_min${MIN}.csv`,[['Codigo','Nombre','Tipo','Estado','Lat','Lon','Sellers hoy','Pedidos dia hoy','Sellers escenario','Pedidos dia escenario','Bodega anfitriona','Destino sellers (si se cierra)']]
+  .concat(rowsData().map(r=>[r.p.id,r.p.n,r.j<EX.length?'Actual':r.p.kind==='prop'?'Potencial':'Manual',r.st.t,crd(r.p.lat),crd(r.p.lon),r.bN??'',num(r.bV),r.sN,num(r.sV),r.p.host?r.p.host.id+' '+r.p.host.n:'',
+    r.st.k==='off'?destinos(r.j).map(o=>`${o.k<0?'Sin cobertura':sc.pts[o.k].id}: ${o.n} sellers / ${num(o.v)} ped`).join(' | '):''])))};
+$('bCsvS').onclick=()=>{const {R}=P();
+  download(`asignacion_sellers_r${R}km.csv`,[['Seller ID','Nombre','Config','Comuna','Venta dia','Lat','Lon','Punto hoy','Dist hoy km','Punto escenario','Dist escenario km']]
+  .concat(F.map((s,i)=>{const b=base.pt[i],e=sc.pt[i];return [s.id,s.n,s.t==='O'?'OOLL':'PUNTO COLAB',s.c,num(s.v),crd(s.lat),crd(s.lon),b<0?'':EX[b].id,b<0?'':num(base.d[i]),e<0?'':sc.pts[e].id,e<0?'':num(sc.d[i])]})))};
+
+
+/* ---------- pestaña Distancia sellers ---------- */
+const D={tipo:'all',red:'act'};
+const COL={C:'#4c9aff',O:'#ffa94d'};
+$('dRad').value=$('rad').value;
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('act',x===b));
+  const dash=b.dataset.tab==='dash';
+  $('app').style.display=dash?'none':'';$('dash').style.display=dash?'block':'none';
+  if(dash)renderDash();else map.invalidateSize();
+});
+function seg(id,key){$(id).addEventListener('click',e=>{const v=e.target.dataset.v;if(!v||e.target.disabled)return;D[key]=v;
+  $(id).querySelectorAll('button').forEach(x=>x.classList.toggle('act',x.dataset.v===v));renderDash()})}
+seg('dTipo','tipo');seg('dRed','red');
+$('dRad').addEventListener('input',()=>renderDash());
+
+function wmedian(rows){const t=rows.reduce((a,r)=>a+r.s.v,0);if(!t)return NaN;let acc=0;for(const r of rows){acc+=r.s.v;if(acc>=t/2)return r.d}return NaN}
+function radiusFor(rows,frac){const t=rows.reduce((a,r)=>a+r.s.v,0);let acc=0;for(const r of rows){acc+=r.s.v;if(acc>=t*frac)return r.d}return NaN}
+
+function renderDash(){
+  const R=+$('dRad').value,MIN=P().MIN;
+  $('dRadV').textContent=f1(R)+' km';
+  const hasNew=newPts.length>0;
+  $('dRed').querySelector('[data-v=new]').disabled=!hasNew;
+  if(!hasNew&&D.red==='new'){D.red='act';$('dRed').querySelectorAll('button').forEach(x=>x.classList.toggle('act',x.dataset.v==='act'))}
+  const pts=D.red==='new'&&sc?sc.pts.filter((p,j)=>sc.alive[j]):EX;
+  // distancia de cada seller al punto más cercano (sin tope de radio)
+  const all=LOC.map(s=>{let bd=Infinity,bj=-1;for(let j=0;j<pts.length;j++){const x=dkm(s.lat,s.lon,pts[j].lat,pts[j].lon);if(x<bd){bd=x;bj=j}}return {s,d:bd,j:bj}});
+  const rows=all.filter(r=>D.tipo==='all'||r.s.t===D.tipo).sort((a,b)=>a.d-b.d);
+  $('dInfo').textContent=`${f0(rows.length)} sellers ubicados · ${pts.length} puntos en la red`;
+  const totV=rows.reduce((a,r)=>a+r.s.v,0),inR=rows.filter(r=>r.d<=R),inV=inR.reduce((a,r)=>a+r.s.v,0);
+  const out=rows.filter(r=>r.d>R),outV=totV-inV;
+  const med=wmedian(rows);
+  const covAt=r=>rows.reduce((a,x)=>a+(x.d<=r?x.s.v:0),0);
+  const cntAt=r=>rows.reduce((a,x)=>a+(x.d<=r?1:0),0);
+
+  $('dKpis').innerHTML=`
+    <div class="card"><span>Pedidos/día dentro del radio</span><b>${pct(inV,totV)}</b><small>${f0(inV)} de ${f0(totV)} pedidos/día</small></div>
+    <div class="card"><span>Sellers dentro del radio</span><b>${pct(inR.length,rows.length)}</b><small>${f0(inR.length)} de ${f0(rows.length)} sellers</small></div>
+    <div class="card"><span>Distancia mediana al punto</span><b>${isNaN(med)?'–':f1(med)+' km'}</b><small>ponderada por pedidos/día</small></div>
+    <div class="card"><span>Fuera del radio</span><b style="color:#ff8080">${f0(outV)}</b><small>pedidos/día · ${f0(out.length)} sellers</small></div>`;
+
+  // puntos que cumplen el mínimo por radio (cada seller va a su punto más cercano si está dentro del radio)
+  const RS=[];for(let r=.5;r<=10.001;r+=.5)RS.push(+r.toFixed(1));
+  const ptsOk=r=>{const l=new Float64Array(pts.length);rows.forEach(x=>{if(x.d<=r)l[x.j]+=x.s.v});let n=0;l.forEach(v=>{if(v>=MIN)n++});return n};
+  const okNow=ptsOk(R);
+
+  // insights
+  const ins=[];
+  ins.push(`Con <b>${f1(R)} km</b>, el <b>${pct(inV,totV)}</b> de los pedidos (${f0(inV)}/día) tiene un punto a esa distancia o menos. La mitad de los pedidos está a <b>${f1(med)} km</b> o menos de un punto.`);
+  const up=covAt(R+.5)-inV,upN=cntAt(R+.5)-inR.length;
+  ins.push(`Subir el radio a <b>${f1(R+.5)} km</b> suma <b>${f0(up)} pedidos/día</b> (${f0(upN)} sellers)`+(R>.5?`; bajarlo a ${f1(R-.5)} km deja fuera <b>${f0(inV-covAt(R-.5))} pedidos/día</b>.`:'.'));
+  const r80=radiusFor(rows,.8),r90=radiusFor(rows,.9);
+  ins.push(`Para cubrir el <b>80%</b> de los pedidos se necesita un radio de <b>${f1(Math.ceil(r80*10)/10)} km</b>; para el <b>90%</b>, <b>${f1(Math.ceil(r90*10)/10)} km</b>.`);
+  ins.push(`Con este radio <b>${okNow} de ${pts.length}</b> puntos llegan a ${MIN} pedidos/día.`);
+  const com=new Map();out.forEach(r=>{const k=r.s.c||'—';const o=com.get(k)||{n:0,v:0,ds:[]};o.n++;o.v+=r.s.v;o.ds.push(r.d);com.set(k,o)});
+  com.forEach(o=>{o.ds.sort((a,b)=>a-b);o.med=o.ds[Math.floor((o.ds.length-1)/2)]});
+  const comL=[...com.entries()].sort((a,b)=>b[1].v-a[1].v);
+  if(comL.length){const [c,o]=comL[0];ins.push(`La comuna con más pedidos fuera del radio es <b>${esc(c)}</b>: ${f0(o.v)} pedidos/día de ${o.n} sellers, a una mediana de ${f1(o.med)} km del punto más cercano.`+(o.v>=MIN?' Por volumen podría justificar un punto nuevo.':''))}
+  const bigOut=out.filter(r=>r.s.v>=MIN).sort((a,b)=>b.s.v-a.s.v);
+  if(bigOut.length)ins.push(`<b>${bigOut.length}</b> seller${bigOut.length>1?'s':''} con ≥ ${MIN} pedidos/día ${bigOut.length>1?'están':'está'} fuera del radio (${bigOut.slice(0,3).map(r=>esc(r.s.n)).join(', ')}${bigOut.length>3?'…':''}). Podrían ser su propio punto o el ancla de uno nuevo.`);
+  if(D.tipo==='all'){const mC=wmedian(rows.filter(r=>r.s.t==='C')),mO=wmedian(rows.filter(r=>r.s.t==='O'));
+    const vO=rows.filter(r=>r.s.t==='O'),vOin=vO.filter(r=>r.d<=R).reduce((a,r)=>a+r.s.v,0),vOt=vO.reduce((a,r)=>a+r.s.v,0);
+    ins.push(`Los sellers <b>OOLL</b> están a una mediana de <b>${f1(mO)} km</b> de un punto (Punto Colab: ${f1(mC)} km). Con ${f1(R)} km, <b>${f0(vOin)} pedidos/día OOLL</b> (${pct(vOin,vOt)}) ya podrían migrar a un punto existente sin abrir nuevos.`)}
+  $('dIns').innerHTML=ins.map(t=>`<li>${t}</li>`).join('');
+
+  // curva de cobertura
+  const types=D.tipo==='all'?['C','O']:[D.tipo];
+  const NAMES={C:'Punto Colab',O:'OOLL'};
+  const series=types.map(t=>{const rr=rows.filter(r=>r.s.t===t),tv=rr.reduce((a,r)=>a+r.s.v,0);
+    return {name:NAMES[t],color:COL[t],ys:RS.map(r=>tv?rr.reduce((a,x)=>a+(x.d<=r?x.s.v:0),0)/tv*100:0)}});
+  $('lgCurve').innerHTML=series.length>1?series.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join(''):'';
+  lineChart($('chCurve'),RS,series,{yMax:100,yFmt:v=>Math.round(v)+'%',tip:(i)=>`<b>Radio ${f1(RS[i])} km</b>`+series.map(s=>`<br><i style="background:${s.color}"></i>${s.name}: ${Math.round(s.ys[i])}%`).join(''),mark:R});
+
+  // histograma
+  const B=[];for(let b=0;b<20;b++)B.push({lo:b*.5,hi:b*.5+.5,lab:f1(b*.5+.5)});B.push({lo:10,hi:Infinity,lab:'>10'});
+  B.forEach(b=>{b.v={};types.forEach(t=>b.v[t]=0)});
+  rows.forEach(r=>{const k=Math.min(20,Math.floor(r.d/.5));if(B[k].v[r.s.t]!=null)B[k].v[r.s.t]+=r.s.v});
+  $('lgHist').innerHTML=types.length>1?types.map(t=>`<span><i style="background:${COL[t]}"></i>${NAMES[t]}</span>`).join(''):'';
+  barChart($('chHist'),B,types,R,NAMES);
+
+  // puntos ≥ mínimo
+  $('subPts').textContent=`Cantidad de puntos con ≥ ${MIN} pedidos/día (de ${pts.length}) si cada seller va a su punto más cercano dentro del radio`;
+  const ys=RS.map(ptsOk);
+  lineChart($('chPts'),RS,[{name:'Puntos ≥ mínimo',color:'#aad500',ys}],{yMax:pts.length,yFmt:v=>Math.round(v),tip:i=>`<b>Radio ${f1(RS[i])} km</b><br>${ys[i]} de ${pts.length} puntos ≥ ${MIN}`,mark:R});
+
+  // tabla comunas
+  const maxC=comL.length?comL[0][1].v:1;
+  $('dCom').innerHTML=comL.slice(0,12).map(([c,o])=>`<tr><td>${esc(c)}</td><td class="n">${o.n}</td><td class="n"><b>${f1(o.v)}</b></td><td class="n">${f1(o.med)} km</td><td><div class="bar" style="width:${o.v/maxC*100}%"></div></td></tr>`).join('')||'<tr><td colspan="5" class="note">Todos los sellers están dentro del radio</td></tr>';
+  // tabla sellers grandes
+  $('dBig').innerHTML=out.slice().sort((a,b)=>b.s.v-a.s.v).slice(0,15).map(r=>`<tr><td><b>${esc(r.s.n)}</b> <span class="cnt">${esc(r.s.id)}</span></td><td>${r.s.t==='O'?'OOLL':'Punto Colab'}</td><td>${esc(r.s.c)}</td><td class="n">${f1(r.s.v)}</td><td class="n">${f1(r.d)}</td><td>${r.j>=0?esc(pts[r.j].id+' · '+pts[r.j].n):'–'}</td></tr>`).join('')||'<tr><td colspan="6" class="note">Ninguno</td></tr>';
+}
+
+const SVGW=560,SVGH=250,M={l:42,r:14,t:14,b:30};
+function hoverTip(host,html,x,y){const tt=host.querySelector('.tt');tt.innerHTML=html;tt.style.display='block';
+  const w=host.clientWidth,tw=tt.offsetWidth;tt.style.left=Math.min(Math.max(0,x+12),w-tw)+'px';tt.style.top=Math.max(0,y-10)+'px'}
+function lineChart(host,xs,series,o){
+  const iw=SVGW-M.l-M.r,ih=SVGH-M.t-M.b,x0=xs[0],x1=xs[xs.length-1];
+  const X=x=>M.l+(x-x0)/(x1-x0)*iw,Y=y=>M.t+ih-(y/o.yMax)*ih;
+  let g='';
+  for(let i=0;i<=4;i++){const v=o.yMax*i/4;g+=`<line class="gl" x1="${M.l}" x2="${SVGW-M.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${M.l-6}" y="${Y(v)+3.5}" text-anchor="end">${o.yFmt(v)}</text>`}
+  for(let k=Math.ceil(x0);k<=x1;k++)g+=`<text class="ax" x="${X(k)}" y="${SVGH-M.b+16}" text-anchor="middle">${k}</text>`;
+  g+=`<text class="ax" x="${SVGW-M.r}" y="${SVGH-2}" text-anchor="end">km</text>`;
+  if(o.mark!=null)g+=`<line x1="${X(o.mark)}" x2="${X(o.mark)}" y1="${M.t}" y2="${M.t+ih}" stroke="#aad500" stroke-dasharray="4 4" stroke-width="1.5" opacity=".8"/><text class="ax" x="${X(o.mark)+4}" y="${M.t+10}" style="fill:#c4ec1c">radio</text>`;
+  series.forEach(s=>{g+=`<polyline fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${s.ys.map((y,i)=>X(xs[i])+','+Y(y)).join(' ')}"/>`});
+  g+=`<line class="hl" x1="0" x2="0" y1="${M.t}" y2="${M.t+ih}" stroke="#8b95a7" stroke-width="1" visibility="hidden"/>`;
+  series.forEach((s,k)=>g+=`<circle class="hd" data-k="${k}" r="4.5" fill="${s.color}" stroke="#111722" stroke-width="2" visibility="hidden"/>`);
+  g+=`<rect x="${M.l}" y="${M.t}" width="${iw}" height="${ih}" fill="transparent" class="hit"/>`;
+  host.innerHTML=`<svg viewBox="0 0 ${SVGW} ${SVGH}" role="img">${g}</svg><div class="tt"></div>`;
+  const svg=host.querySelector('svg'),hl=svg.querySelector('.hl'),dots=svg.querySelectorAll('.hd');
+  svg.querySelector('.hit').addEventListener('mousemove',e=>{const rc=svg.getBoundingClientRect(),sx=(e.clientX-rc.left)/rc.width*SVGW;
+    const xv=x0+(sx-M.l)/iw*(x1-x0);let i=0,bd=1e9;xs.forEach((x,k)=>{const d=Math.abs(x-xv);if(d<bd){bd=d;i=k}});
+    hl.setAttribute('x1',X(xs[i]));hl.setAttribute('x2',X(xs[i]));hl.setAttribute('visibility','visible');
+    dots.forEach(c=>{const s=series[+c.dataset.k];c.setAttribute('cx',X(xs[i]));c.setAttribute('cy',Y(s.ys[i]));c.setAttribute('visibility','visible')});
+    hoverTip(host,o.tip(i),X(xs[i])/SVGW*rc.width,(e.clientY-rc.top))});
+  svg.querySelector('.hit').addEventListener('mouseleave',()=>{hl.setAttribute('visibility','hidden');dots.forEach(c=>c.setAttribute('visibility','hidden'));host.querySelector('.tt').style.display='none'});
+}
+function barChart(host,B,types,R,NAMES){
+  const iw=SVGW-M.l-M.r,ih=SVGH-M.t-M.b,n=B.length,bw=iw/n;
+  const tot=B.map(b=>types.reduce((a,t)=>a+b.v[t],0)),ymax=Math.max(1,...tot)*1.08;
+  const Y=v=>v/ymax*ih;let g='';
+  for(let i=0;i<=4;i++){const v=ymax*i/4,y=M.t+ih-Y(v);g+=`<line class="gl" x1="${M.l}" x2="${SVGW-M.r}" y1="${y}" y2="${y}"/><text class="ax" x="${M.l-6}" y="${y+3.5}" text-anchor="end">${f0(v)}</text>`}
+  B.forEach((b,i)=>{const x=M.l+i*bw+1.5,w=Math.max(1,bw-3),dim=b.lo>=R-1e-9;let y=M.t+ih;
+    types.forEach((t,k)=>{const h=Y(b.v[t]);if(h<=0)return;const top=k===types.length-1||types.slice(k+1).every(u=>b.v[u]<=0);
+      y-=h;g+=`<path d="${top?`M${x},${y+h}V${y+Math.min(4,h)}Q${x},${y} ${x+Math.min(4,w/2)},${y}H${x+w-Math.min(4,w/2)}Q${x+w},${y} ${x+w},${y+Math.min(4,h)}V${y+h}Z`:`M${x},${y+h}V${y}H${x+w}V${y+h}Z`}" fill="${COL[t]}" opacity="${dim?.35:1}" stroke="#111722" stroke-width="1"/>`});
+    if(i%2===1||i===n-1)g+=`<text class="ax" x="${x+w/2}" y="${SVGH-M.b+16}" text-anchor="middle">${b.lab}</text>`;
+    g+=`<rect class="hb" data-i="${i}" x="${M.l+i*bw}" y="${M.t}" width="${bw}" height="${ih}" fill="transparent"/>`});
+  g+=`<text class="ax" x="${SVGW-M.r}" y="${SVGH-2}" text-anchor="end">km</text>`;
+  const xr=M.l+Math.min(n,R/.5)*bw;g+=`<line x1="${xr}" x2="${xr}" y1="${M.t}" y2="${M.t+ih}" stroke="#aad500" stroke-dasharray="4 4" stroke-width="1.5" opacity=".8" pointer-events="none"/>`;
+  host.innerHTML=`<svg viewBox="0 0 ${SVGW} ${SVGH}" role="img">${g}</svg><div class="tt"></div>`;
+  const svg=host.querySelector('svg');
+  svg.querySelectorAll('.hb').forEach(r=>{r.addEventListener('mousemove',e=>{const b=B[+r.dataset.i],rc=svg.getBoundingClientRect();
+      const lab=b.hi===Infinity?'Más de 10 km':`${f1(b.lo)}–${f1(b.hi)} km`;
+      hoverTip(host,`<b>${lab}</b>${b.lo>=R?' · fuera del radio':''}`+types.map(t=>`<br><i style="background:${COL[t]}"></i>${NAMES[t]}: ${f1(b.v[t])} ped/día`).join(''),e.clientX-rc.left,e.clientY-rc.top)});
+    r.addEventListener('mouseleave',()=>host.querySelector('.tt').style.display='none')});
+}
+recompute(false);
+};
+const __DATA = /*__DATA__*/null;
+if(__DATA)startApp(__DATA);
+</script>
+<!-- Capa web: login Firebase + administración. preparar_datos.py la inserta antes de </body> en web/index.html -->
+<style>
+#gate{position:fixed;inset:0;z-index:5000;background:radial-gradient(1200px 600px at 70% -10%,rgba(170,213,0,.10),transparent),var(--bg);display:grid;place-items:center;padding:16px}
+.gbox{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.gbox .logo{margin-bottom:14px}
+.gbox h2{font-size:18px;text-transform:none;letter-spacing:0;color:var(--ink);margin:0 0 4px}
+.gbox p{color:var(--muted);margin:0 0 16px;font-size:12.5px}
+.gbox input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--ink);font:inherit;margin-bottom:8px;outline:none}
+.gbox input:focus{border-color:var(--new)}
+.gbox button{width:100%;padding:9px;margin-top:4px}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:8px;background:#fff!important;color:#1d2330!important;font-weight:600;border:0!important}
+.sep{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11.5px;margin:14px 0}
+.sep:before,.sep:after{content:"";flex:1;height:1px;background:var(--line)}
+.links{display:flex;justify-content:space-between;margin-top:10px;font-size:12px}
+.links a{color:#c9a8ff;cursor:pointer;text-decoration:none}
+#gMsg{min-height:18px;font-size:12px;margin-top:10px;color:#ff8080}
+#gMsg.ok{color:#c4ec1c}
+#navUser{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
+#navUser button{padding:5px 10px}
+#admin{height:calc(100% - 46px);overflow:auto;display:none;padding:20px 16px}
+#admin .dwrap{max-width:900px}
+#admin form{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+#admin form input{flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--ink);font:inherit}
+#admin .dt td{padding:7px 6px}
+.adm-msg{font-size:12px;margin-top:8px;color:var(--muted)}
+</style>
+
+<div id="gate"><div class="gbox" id="gBox">
+  <div class="logo">F</div>
+  <h2>Red Puntos Colab</h2>
+  <p>Cargando…</p>
+</div></div>
+
+<div id="admin"><div class="dwrap">
+  <div class="card" style="margin-bottom:14px">
+    <h3>Personas con acceso</h3>
+    <div class="sub">Solo estos correos pueden ver los datos. Deben entrar con ese mismo correo (Google o correo/clave verificado).</div>
+    <form id="aForm"><input id="aEmail" type="email" placeholder="correo@empresa.com" required><input id="aName" placeholder="Nombre (opcional)"><button class="primary" type="submit">Dar acceso</button></form>
+    <table class="dt"><thead><tr><th>Correo</th><th>Nombre</th><th>Desde</th><th></th></tr></thead><tbody id="aList"></tbody></table>
+    <div class="adm-msg" id="aMsg"></div>
+  </div>
+  <div class="card">
+    <h3>Datos</h3>
+    <div class="sub">Sube el archivo <b>datos_firestore.json</b> que genera <code>python preparar_datos.py</code> en tu computador. Reemplaza los datos actuales para todos.</div>
+    <div id="dMeta" class="adm-msg" style="margin:0 0 10px"></div>
+    <input type="file" id="dFile" accept=".json,application/json">
+    <button class="primary" id="dUp" style="margin-left:8px">Subir datos</button>
+    <div class="adm-msg" id="dMsg"></div>
+  </div>
+</div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signOut }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, getDocs, collection, setDoc, deleteDoc, writeBatch, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const CONFIG = {"apiKey": "AIzaSyAE6tQAIVqKpBmNduRDh8el9aQ0vIxrmlI", "authDomain": "puntos-colab-tm.firebaseapp.com", "projectId": "puntos-colab-tm", "storageBucket": "puntos-colab-tm.firebasestorage.app", "messagingSenderId": "798007424960", "appId": "1:798007424960:web:7e91622c8afe986b61ba25"};
+const OWNER = "tmontes30@gmail.com";
+const CHUNK = 800;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const box = html => { $("gBox").innerHTML = `<div class="logo">F</div>${html}`; };
+
+if (!CONFIG) { box(`<h2>Falta configurar Firebase</h2><p>Esta página no tiene la configuración del proyecto.</p>`); throw new Error("sin config"); }
+const app = initializeApp(CONFIG);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const ERR = {
+  "auth/invalid-credential": "Correo o clave incorrectos.", "auth/wrong-password": "Correo o clave incorrectos.",
+  "auth/user-not-found": "Correo o clave incorrectos.", "auth/email-already-in-use": "Ese correo ya tiene cuenta. Inicia sesión.",
+  "auth/weak-password": "La clave debe tener al menos 6 caracteres.", "auth/invalid-email": "Correo no válido.",
+  "auth/popup-closed-by-user": "Se cerró la ventana de Google.", "auth/too-many-requests": "Demasiados intentos. Espera unos minutos.",
+  "auth/unauthorized-domain": "Este dominio no está autorizado en Firebase.",
+  "auth/configuration-not-found": "El login aún no está activado en Firebase.",
+  "auth/operation-not-allowed": "Este método de login no está activado en Firebase.",
+};
+const msg = (t, ok) => { const m = $("gMsg"); if (m) { m.textContent = t; m.className = ok ? "ok" : ""; } };
+const fail = e => msg(ERR[e.code] || e.message);
+
+function loginView() {
+  box(`<h2>Red Puntos Colab</h2><p>Acceso restringido. Entra con el correo que te autorizaron.</p>
+    <button class="gbtn" id="gG"><svg width="16" height="16" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Entrar con Google</button>
+    <div class="sep">o con correo</div>
+    <input id="gE" type="email" placeholder="Correo" autocomplete="username">
+    <input id="gP" type="password" placeholder="Clave" autocomplete="current-password">
+    <button class="primary" id="gIn">Iniciar sesión</button>
+    <div class="links"><a id="gUp">Crear cuenta</a><a id="gRe">Olvidé mi clave</a></div>
+    <div id="gMsg"></div>`);
+  $("gG").onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).catch(fail);
+  const creds = () => [$("gE").value.trim(), $("gP").value];
+  $("gIn").onclick = () => { const [e, p] = creds(); signInWithEmailAndPassword(auth, e, p).catch(fail); };
+  $("gP").onkeydown = e => { if (e.key === "Enter") $("gIn").click(); };
+  $("gUp").onclick = async () => { const [e, p] = creds(); if (!e || !p) return msg("Escribe correo y una clave nueva.");
+    try { const c = await createUserWithEmailAndPassword(auth, e, p); await sendEmailVerification(c.user); } catch (x) { fail(x); } };
+  $("gRe").onclick = () => { const [e] = creds(); if (!e) return msg("Escribe tu correo arriba.");
+    sendPasswordResetEmail(auth, e).then(() => msg("Te enviamos un correo para cambiar la clave.", true)).catch(fail); };
+}
+
+function verifyView(user) {
+  box(`<h2>Verifica tu correo</h2><p>Enviamos un enlace a <b>${esc(user.email)}</b>. Ábrelo y luego presiona "Ya verifiqué".</p>
+    <button class="primary" id="gV">Ya verifiqué</button><button id="gR">Reenviar correo</button><button id="gX">Salir</button><div id="gMsg"></div>`);
+  $("gV").onclick = async () => { await user.reload(); if (auth.currentUser.emailVerified) { await user.getIdToken(true); location.reload(); } else msg("Aún no aparece verificado."); };
+  $("gR").onclick = () => sendEmailVerification(user).then(() => msg("Correo reenviado.", true)).catch(fail);
+  $("gX").onclick = () => signOut(auth).then(() => location.reload());
+}
+
+function deniedView(user) {
+  box(`<h2>Sin acceso</h2><p>La cuenta <b>${esc(user.email)}</b> no está autorizada para ver estos datos. Pide acceso a ${OWNER}.</p>
+    <button id="gX">Usar otra cuenta</button>`);
+  $("gX").onclick = () => signOut(auth).then(() => location.reload());
+}
+
+async function loadData() {
+  const meta = await getDoc(doc(db, "dataset", "meta"));
+  if (!meta.exists()) return null;
+  const m = meta.data();
+  const parts = await Promise.all(Array.from({ length: m.partes }, (_, i) => getDoc(doc(db, "dataset", "sellers_" + i))));
+  const sellers = parts.flatMap(p => JSON.parse(p.data().json));
+  return { sellers, puntos: JSON.parse(m.puntos), generado: m.generado };
+}
+
+function setupNav(user, isOwner) {
+  const nav = $("nav");
+  const u = document.createElement("div"); u.id = "navUser";
+  u.innerHTML = `<span>${esc(user.email)}</span><button id="bOut">Salir</button>`;
+  nav.appendChild(u);
+  $("bOut").onclick = () => signOut(auth).then(() => location.reload());
+  if (!isOwner) return;
+  const t = document.createElement("button"); t.className = "tab"; t.dataset.tab = "admin"; t.textContent = "Administración";
+  nav.insertBefore(t, u);
+  t.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("act", x === t));
+    $("app").style.display = "none"; $("dash").style.display = "none"; $("admin").style.display = "block"; loadAdmin(); };
+  document.querySelectorAll('.tab[data-tab="map"],.tab[data-tab="dash"]').forEach(b => b.addEventListener("click", () => { $("admin").style.display = "none"; }));
+}
+
+/* ---------- administración (solo owner; las reglas de Firestore lo exigen igual) ---------- */
+async function loadAdmin() {
+  try {
+    const snap = await getDocs(collection(db, "allowlist"));
+    const rows = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.id.localeCompare(b.id));
+    $("aList").innerHTML = rows.map(r => `<tr><td>${esc(r.id)}</td><td>${esc(r.nombre || "")}</td><td class="cnt">${r.agregado?.toDate ? r.agregado.toDate().toLocaleDateString("es-CL") : ""}</td>
+      <td class="n"><button data-del="${esc(r.id)}">Quitar</button></td></tr>`).join("") || `<tr><td colspan="4" class="note">Todavía no hay personas invitadas.</td></tr>`;
+    const meta = await getDoc(doc(db, "dataset", "meta"));
+    $("dMeta").innerHTML = meta.exists() ? `Datos actuales: generados ${esc(meta.data().generado)} · ${meta.data().total} sellers · subidos ${meta.data().actualizado?.toDate?.().toLocaleString("es-CL") || ""}` : "Todavía no hay datos cargados.";
+  } catch (e) { $("aMsg").textContent = "Error: " + e.message; }
+}
+$("aList").addEventListener("click", async e => {
+  const id = e.target.dataset.del; if (!id || !confirm(`¿Quitar el acceso de ${id}?`)) return;
+  await deleteDoc(doc(db, "allowlist", id)); loadAdmin();
+});
+$("aForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const mail = $("aEmail").value.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return;
+  try { await setDoc(doc(db, "allowlist", mail), { nombre: $("aName").value.trim(), agregado: serverTimestamp() });
+    $("aEmail").value = ""; $("aName").value = ""; $("aMsg").textContent = `Acceso dado a ${mail}. Envíale el link de la página.`; loadAdmin();
+  } catch (x) { $("aMsg").textContent = "Error: " + x.message; }
+});
+$("dUp").onclick = async () => {
+  const f = $("dFile").files[0]; if (!f) return $("dMsg").textContent = "Elige el archivo datos_firestore.json.";
+  try {
+    const d = JSON.parse(await f.text());
+    if (!Array.isArray(d.sellers) || !Array.isArray(d.puntos)) throw new Error("El archivo no tiene el formato esperado.");
+    $("dMsg").textContent = "Subiendo…";
+    const b = writeBatch(db), partes = Math.ceil(d.sellers.length / CHUNK);
+    for (let i = 0; i < partes; i++) b.set(doc(db, "dataset", "sellers_" + i), { json: JSON.stringify(d.sellers.slice(i * CHUNK, (i + 1) * CHUNK)) });
+    b.set(doc(db, "dataset", "meta"), { generado: d.generado, partes, total: d.sellers.length, puntos: JSON.stringify(d.puntos), actualizado: serverTimestamp() });
+    await b.commit();
+    $("dMsg").textContent = `Listo: ${d.sellers.length} sellers y ${d.puntos.length} puntos. Recargando…`;
+    setTimeout(() => location.reload(), 1200);
+  } catch (x) { $("dMsg").textContent = "Error: " + x.message; }
+};
+
+/* ---------- flujo principal ---------- */
+let started = false;
+onAuthStateChanged(auth, async user => {
+  if (started) return;
+  if (!user) return loginView();
+  if (!user.emailVerified) return verifyView(user);
+  const email = user.email.toLowerCase(), isOwner = email === OWNER;
+  box(`<h2>Cargando datos…</h2><p>${esc(user.email)}</p>`);
+  try {
+    if (!isOwner) { const a = await getDoc(doc(db, "allowlist", email)); if (!a.exists()) return deniedView(user); }
+    const data = await loadData();
+    started = true;
+    setupNav(user, isOwner);
+    $("gate").style.display = "none";
+    if (data) window.startApp(data);
+    else if (isOwner) { $("app").style.display = "none"; document.querySelector('.tab[data-tab="admin"]').click(); $("dMsg").textContent = "Sube los datos para empezar."; }
+    else box(`<h2>Sin datos</h2><p>La owner aún no carga los datos.</p>`), $("gate").style.display = "";
+  } catch (e) {
+    if (e.code === "permission-denied") deniedView(user);
+    else box(`<h2>Error</h2><p>${esc(e.message)}</p>`);
+  }
+});
+</script>
+
+</body>
+</html>
