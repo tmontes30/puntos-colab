@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<script>if(window.top!==window.self){document.documentElement.style.display="none";try{window.top.location=location.href}catch(e){}}</script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com 'sha256-gKuzGiQ1GF5N5/VTZnvBVAR4klcV6z7JdbZ5hILloSc=' 'sha256-4Sd4a1F2xXz4wtCsCfxOW/ky1X7Vb9lpg/0mZljnn6g=' 'sha256-bwXp0Jxr6PDZcnogoh0qQO+A7ex9oKgvecmHjQh2lTQ='; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://server.arcgisonline.com https://tile.openstreetmap.org https://cdnjs.cloudflare.com; connect-src https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com; frame-src https://puntos-colab-tm.firebaseapp.com https://apis.google.com https://accounts.google.com; font-src 'self' data:; base-uri 'none'; form-action 'self'; object-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Evaluador Puntos Dropoff</title>
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEz0lEQVR42u2bTWgcZRjHf+987czuZjefJjZi2lBsay3VWlEKYq1eRamg4EkQ8SbUowehCMWbePNswYOI4FWKoKdKrZoWau1H+pGm2iUxSbOZ3fl6Xw8zO9mmqbfsdmd2YGHmZZad+b/P83/+z8eKn2dQ5PjQyPnRB6APQB+APgC5PoyH7YGE0FEqQtdKjFTfpFJ8Hk0rslz/kdrSyawDoKFUxNjgW0yNf0oYLTG/8Dlu808ieTfrFqABksfHP2Fq/Dir7hnOzR5BSjf7HCCEDkgmht9navw4Svlcvf0hUroIYQIi+WTSAjSUktjWdrZPnAAUq+4ZVt1fAIFSQbYtQAgBKCaGP8A0RgHBytpPgEIILetRQKCUjBm/8hokedld93Q+dEC8w4qivRensBsQBNG/rDVmAFBK5kMIlZ2DCRGC59/ED+cT0lP5AKBSOpSerzVnUCrqiP93HQClIjRRoGTvS9dW3TN5yQXinzbNCSxzMlmTuN6FfAAQhz8oWk9g6iMABOEiTe9KYh0qH9lgyTmQnjf8y3jBrYQAZU4AsJ9aJ8DG+VQfZN4FlJIIYVG0994TAdrdI8MAxAKoYD6GbW1PAAmoN37PR0WotcO2tQNDH0oIcAHPv9YxBdjBXEBsImp0hICSsz9d8YKbBNEiQhj3KUClol4GQG3yAvH1gHMwXVmun0KpkMzVBE19hJHqG5t4m2Kg+EJ6VTCnGB96F00rbHABycLKd4TRUq8BECczpjlOtfwytF5KaCgVYurD2NaOlAB1fYBq+TACPQUIoRNFqyysfLt1T9mt5uhg+Qj7pk8BgqZ/jbN/7UEqL6tlca0tAhgoFVItHU4FT8O7jFQ+QphJJihQqlUREgmPhL0MgGxj9BCQlJx9bQLoXML8EpC00oAMFkRija/rlQ0p8OlN7oNiYQ87J79kcvRYWjDp8ZpgbM62OYVlPBoHRFnHbV5oywDje3S9wu6pb9JcQdMc5monetsCWgrQKexC04oA+MHfeMHcOvMnu2/oQ5TsJ9OyeKUtZPa8FG6P/2vN80Synph4iwc0PH+O+YUvEMLEC24xV/us912gVeQoO0+na/XGbw8kzdnbH1FbOokf3sEPbvc6ADEBGvoQjrVzQwR48HfWM0RtS4okWmd7ALH/W+Y2AMJoeQMB3p9HxI+obVmFyOhGBShueILnX99AgP+vITJBgu0psOtdRCm/jQAzPCITqzrBgPNcGwH+CvmYEYrFjWVuw7am1xVg42w+AEgJ0JrG0IcBCKJFmmkJTOVjSqzsPJtq+qZ3NYntnesBdA2AdQF0YEMTNOhYE7TLFhDH8+I9TZBzkI9ByZgAHWs6JUClogdI4AwCkBKgvQtDr8YZYDhPw7/U8R5AV0mwZO9P3cFtXiQIF9MOUaYBaO1wtfRi6hLL9R+SKTBBxmeFk9K4MUbJeQaQRNJlceX7rsf/jlhAK+YPll/B1EcBjdrSVzT8K+l0aEYt4N7R1onh9xBCp+Fd4sad48TzgSrL4/KKuJYvmRw9xmD5VZr+LBduHCUIa1ua3z8UAJjGGEV7L2PVt3lk8B1qy19z/Z+P8fwbD9XLbxkAleIhRqqv4wXzzMy+xFrjjy0ta/Vkb5D+f4b6APQB6APQB6APQNeP/wAhat0z/WylMgAAAABJRU5ErkJggg==">
@@ -537,7 +540,7 @@ function pointPopup(j){
   }else{
     h+=p.kind==='prop'?`Bodega de: <b>${esc(p.host.n)}</b> (${esc(p.host.id)})<br>${esc(p.host.d)}, ${esc(p.host.c)}<br>`:'Ubicación elegida en el mapa<br>';
     h+=`<b>${sc.cnt[j]}</b> sellers · <b>${f1(sc.load[j])}</b> pedidos/día<br><b>De dónde vienen:</b>`+breakdown(sc.pt,base.pt,j,k=>k<0?'Sin cobertura hoy':EX[k].id+' · '+EX[k].n);
-    h+=`<div class="btns"><button onclick="APP.removePt(${j})">Quitar este punto</button></div>`;
+    h+=`<div class="btns"><button data-rmpt="${j}">Quitar este punto</button></div>`;
   }
   return h+'</div>';
 }
@@ -556,6 +559,7 @@ function sellerPopup(s){
 }
 
 /* ---------- acciones ---------- */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-rmpt]');if(b)APP.removePt(+b.dataset.rmpt)});
 window.APP={removePt(j){const p=sc.pts[j];newPts=newPts.filter(x=>x!==p);map.closePopup();selected=null;
   // renumerar propuestos
   let n=0;newPts.forEach(x=>{if(x.kind==='prop'){x.id='N'+(++n);x.n='Potencial '+n}});
@@ -738,7 +742,6 @@ recompute(false);
 const __DATA = /*__DATA__*/null;
 if(__DATA)startApp(__DATA);
 </script>
-<!-- Capa web: login Firebase + administración. preparar_datos.py la inserta antes de </body> en web/index.html -->
 <style>
 #gate{position:fixed;inset:0;z-index:5000;background:radial-gradient(1200px 600px at 70% -10%,rgba(194,209,0,.10),transparent),var(--bg);display:grid;place-items:center;padding:16px}
 .gbox{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
