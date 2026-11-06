@@ -600,7 +600,7 @@ $('bCsvS').onclick=()=>{const {R}=P();
 const D={tipo:'all',red:'act'};
 const COL={C:'#4c9aff',O:'#ffa94d'};
 $('dRad').value=$('rad').value;
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+document.querySelectorAll('.tab[data-tab="map"],.tab[data-tab="dash"]').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('act',x===b));
   const dash=b.dataset.tab==='dash';
   $('app').style.display=dash?'none':'';$('dash').style.display=dash?'block':'none';
