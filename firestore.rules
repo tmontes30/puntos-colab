@@ -19,6 +19,21 @@ service cloud.firestore {
       allow list, write: if isOwner();
     }
 
+    // Contador de ingresos: cada usuario autorizado solo puede sumar 1 a su propio registro; solo la owner lo lee
+    match /visitas/{mail} {
+      function mine() { return (isOwner() || isAllowed()) && mail == email(); }
+      allow read: if isOwner();
+      allow create: if mine()
+        && request.resource.data.keys().hasOnly(['n', 'primera', 'ultima'])
+        && request.resource.data.n == 1
+        && request.resource.data.primera == request.time
+        && request.resource.data.ultima == request.time;
+      allow update: if mine()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['n', 'ultima'])
+        && request.resource.data.n == resource.data.n + 1
+        && request.resource.data.ultima == request.time;
+    }
+
     // Todo lo demás, cerrado
     match /{document=**} {
       allow read, write: if false;

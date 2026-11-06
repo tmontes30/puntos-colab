@@ -779,6 +779,11 @@ if(__DATA)startApp(__DATA);
     <table class="dt"><thead><tr><th>Correo</th><th>Nombre</th><th>Desde</th><th></th></tr></thead><tbody id="aList"></tbody></table>
     <div class="adm-msg" id="aMsg"></div>
   </div>
+  <div class="card" style="margin-bottom:14px">
+    <h3>Ingresos por usuario</h3>
+    <div class="sub">Cuenta una vez cada vez que alguien entra a la página con acceso (incluye recargar la página).</div>
+    <table class="dt"><thead><tr><th>Correo</th><th>Nombre</th><th class="n">Ingresos</th><th>Último ingreso</th><th>Primer ingreso</th></tr></thead><tbody id="vList"></tbody></table>
+  </div>
   <div class="card">
     <h3>Datos</h3>
     <div class="sub">Sube el archivo <b>datos_firestore.json</b> que genera <code>python preparar_datos.py</code> en tu computador. Reemplaza los datos actuales para todos.</div>
@@ -794,7 +799,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, collection, setDoc, deleteDoc, writeBatch, serverTimestamp }
+import { getFirestore, doc, getDoc, getDocs, collection, setDoc, updateDoc, deleteDoc, writeBatch, serverTimestamp, increment }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const CONFIG = {"apiKey": "AIzaSyAE6tQAIVqKpBmNduRDh8el9aQ0vIxrmlI", "authDomain": "puntos-colab-tm.firebaseapp.com", "projectId": "puntos-colab-tm", "storageBucket": "puntos-colab-tm.firebasestorage.app", "messagingSenderId": "798007424960", "appId": "1:798007424960:web:7e91622c8afe986b61ba25"};
@@ -883,6 +888,12 @@ async function loadAdmin() {
     const rows = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.id.localeCompare(b.id));
     $("aList").innerHTML = rows.map(r => `<tr><td>${esc(r.id)}</td><td>${esc(r.nombre || "")}</td><td class="cnt">${r.agregado?.toDate ? r.agregado.toDate().toLocaleDateString("es-CL") : ""}</td>
       <td class="n"><button data-del="${esc(r.id)}">Quitar</button></td></tr>`).join("") || `<tr><td colspan="4" class="note">Todavía no hay personas invitadas.</td></tr>`;
+    const names = Object.fromEntries(rows.map(r => [r.id, r.nombre || ""]));
+    const vs = (await getDocs(collection(db, "visitas"))).docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.n || 0) - (a.n || 0));
+    const fd = t => t?.toDate ? t.toDate().toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" }) : "";
+    $("vList").innerHTML = vs.map(v => `<tr><td>${esc(v.id)}</td><td>${esc(v.id === OWNER ? "(owner)" : names[v.id] ?? "(sin acceso hoy)")}</td>
+      <td class="n"><b>${(v.n || 0).toLocaleString("es-CL")}</b></td><td class="cnt">${fd(v.ultima)}</td><td class="cnt">${fd(v.primera)}</td></tr>`).join("")
+      || `<tr><td colspan="5" class="note">Todavía no hay ingresos registrados.</td></tr>`;
     const meta = await getDoc(doc(db, "dataset", "meta"));
     $("dMeta").innerHTML = meta.exists() ? `Datos actuales: generados ${esc(meta.data().generado)} · ${meta.data().total} sellers · subidos ${meta.data().actualizado?.toDate?.().toLocaleString("es-CL") || ""}` : "Todavía no hay datos cargados.";
   } catch (e) { $("aMsg").textContent = "Error: " + e.message; }
@@ -914,6 +925,17 @@ $("dUp").onclick = async () => {
   } catch (x) { $("dMsg").textContent = "Error: " + x.message; }
 };
 
+/* ---------- contador de ingresos (no bloquea la carga si falla) ---------- */
+async function registrarIngreso(email) {
+  const ref = doc(db, "visitas", email);
+  try { await updateDoc(ref, { n: increment(1), ultima: serverTimestamp() }); }
+  catch (e) {
+    if (e.code !== "not-found") return console.warn("visitas:", e.code);
+    try { await setDoc(ref, { n: 1, primera: serverTimestamp(), ultima: serverTimestamp() }); }
+    catch (x) { console.warn("visitas:", x.code); }
+  }
+}
+
 /* ---------- flujo principal ---------- */
 let started = false;
 onAuthStateChanged(auth, async user => {
@@ -926,6 +948,7 @@ onAuthStateChanged(auth, async user => {
     if (!isOwner) { const a = await getDoc(doc(db, "allowlist", email)); if (!a.exists()) return deniedView(user); }
     const data = await loadData();
     started = true;
+    registrarIngreso(email);
     setupNav(user, isOwner);
     $("gate").style.display = "none";
     if (data) window.startApp(data);
