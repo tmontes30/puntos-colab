@@ -930,7 +930,7 @@ async function registrarIngreso(email) {
   const ref = doc(db, "visitas", email);
   try { await updateDoc(ref, { n: increment(1), ultima: serverTimestamp() }); }
   catch (e) {
-    if (e.code !== "not-found") return console.warn("visitas:", e.code);
+    // si el registro no existe, las reglas responden permission-denied (no not-found): se intenta crearlo
     try { await setDoc(ref, { n: 1, primera: serverTimestamp(), ultima: serverTimestamp() }); }
     catch (x) { console.warn("visitas:", x.code); }
   }
