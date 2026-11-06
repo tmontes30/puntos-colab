@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Evaluador Puntos Dropoff</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEz0lEQVR42u2bTWgcZRjHf+987czuZjefJjZi2lBsay3VWlEKYq1eRamg4EkQ8SbUowehCMWbePNswYOI4FWKoKdKrZoWau1H+pGm2iUxSbOZ3fl6Xw8zO9mmqbfsdmd2YGHmZZad+b/P83/+z8eKn2dQ5PjQyPnRB6APQB+APgC5PoyH7YGE0FEqQtdKjFTfpFJ8Hk0rslz/kdrSyawDoKFUxNjgW0yNf0oYLTG/8Dlu808ieTfrFqABksfHP2Fq/Dir7hnOzR5BSjf7HCCEDkgmht9navw4Svlcvf0hUroIYQIi+WTSAjSUktjWdrZPnAAUq+4ZVt1fAIFSQbYtQAgBKCaGP8A0RgHBytpPgEIILetRQKCUjBm/8hokedld93Q+dEC8w4qivRensBsQBNG/rDVmAFBK5kMIlZ2DCRGC59/ED+cT0lP5AKBSOpSerzVnUCrqiP93HQClIjRRoGTvS9dW3TN5yQXinzbNCSxzMlmTuN6FfAAQhz8oWk9g6iMABOEiTe9KYh0qH9lgyTmQnjf8y3jBrYQAZU4AsJ9aJ8DG+VQfZN4FlJIIYVG0994TAdrdI8MAxAKoYD6GbW1PAAmoN37PR0WotcO2tQNDH0oIcAHPv9YxBdjBXEBsImp0hICSsz9d8YKbBNEiQhj3KUClol4GQG3yAvH1gHMwXVmun0KpkMzVBE19hJHqG5t4m2Kg+EJ6VTCnGB96F00rbHABycLKd4TRUq8BECczpjlOtfwytF5KaCgVYurD2NaOlAB1fYBq+TACPQUIoRNFqyysfLt1T9mt5uhg+Qj7pk8BgqZ/jbN/7UEqL6tlca0tAhgoFVItHU4FT8O7jFQ+QphJJihQqlUREgmPhL0MgGxj9BCQlJx9bQLoXML8EpC00oAMFkRija/rlQ0p8OlN7oNiYQ87J79kcvRYWjDp8ZpgbM62OYVlPBoHRFnHbV5oywDje3S9wu6pb9JcQdMc5monetsCWgrQKexC04oA+MHfeMHcOvMnu2/oQ5TsJ9OyeKUtZPa8FG6P/2vN80Synph4iwc0PH+O+YUvEMLEC24xV/us912gVeQoO0+na/XGbw8kzdnbH1FbOokf3sEPbvc6ADEBGvoQjrVzQwR48HfWM0RtS4okWmd7ALH/W+Y2AMJoeQMB3p9HxI+obVmFyOhGBShueILnX99AgP+vITJBgu0psOtdRCm/jQAzPCITqzrBgPNcGwH+CvmYEYrFjWVuw7am1xVg42w+AEgJ0JrG0IcBCKJFmmkJTOVjSqzsPJtq+qZ3NYntnesBdA2AdQF0YEMTNOhYE7TLFhDH8+I9TZBzkI9ByZgAHWs6JUClogdI4AwCkBKgvQtDr8YZYDhPw7/U8R5AV0mwZO9P3cFtXiQIF9MOUaYBaO1wtfRi6hLL9R+SKTBBxmeFk9K4MUbJeQaQRNJlceX7rsf/jlhAK+YPll/B1EcBjdrSVzT8K+l0aEYt4N7R1onh9xBCp+Fd4sad48TzgSrL4/KKuJYvmRw9xmD5VZr+LBduHCUIa1ua3z8UAJjGGEV7L2PVt3lk8B1qy19z/Z+P8fwbD9XLbxkAleIhRqqv4wXzzMy+xFrjjy0ta/Vkb5D+f4b6APQB6APQB6APQNeP/wAhat0z/WylMgAAAABJRU5ErkJggg==">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{
   color-scheme:dark;
   --bg:#0b0f17; --panel:#111722; --panel2:#171f2d; --ink:#e6eaf2; --muted:#8b95a7; --line:#232c3b; --line2:#1b2330;
-  --colab:#4c9aff; --ooll:#ffa94d; --fala:#9fd400; --fala-bg:#aad500;
+  --colab:#4c9aff; --ooll:#ffa94d; --fala:#9fd400; --fala-bg:#c2d100; --flogo:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACsAAABgCAYAAACEwotvAAAGr0lEQVR42s2bS4wUVRSG/1Pdw2AE1I7GgVEMqAPyFlFQh5hANJgYZmVijBvjyoWPsDJxYdyREA2JexeaqFvdaNhhFAkvgZlRwCHDSzTIKyAozHT9LuaceHLTNV3VXTVVlXRqprr71tenzuuec6+g5IOkAIhEpOmu3QNgEYA+AARwDcColAxaM0iSiwBsATAEYBDAbIWM9eNDpYLquY/kTpJX+P/xGcnnSPaTnE9yMclZZYMOkTzlIM+Q3IiqHA70HZKxQt4meZ7kCn2vTrJGUvQVlQFa1/PbCtkkOaHnrfpeT5UkOqSgkwpKkt/4z5QNGunjXEjyD338TX2R5Ev6fjVg9fy5k6qBHifZWzWDWqeG1FTJmgrsTKsCM2Fl1PM2AD36v7h7/6BRrDKPfwHJSyrJ2LmsvzVyIY17KlqyNv5mAA0ATZWqSfsYgDMkRUTismEN4GUH6K/v1tygluWXF5JNiUhMsgFgnUpUgvv+FOh1aZK1sVcAuF+BIne+pWpQCViT4hq9TxyAnQMwXhVYg3smwZWNicgNkpGIlAfr9PVOABsCSRvYnqwMUcEq8AiAB4Jrds+9WVRgJmCXqVuKnX+NAFwHcKIqsHCewAPZeRzA+arAGsDKhOvHReR2FuMqBNYZ1x1OsqFx/dzJ/aMC9fUxAAudnvr77cuqAkXB2pirnXHBQV8CMFwVWANYNY2+XqgKbOzcVivYUVeNKQ9WjYsk5wBYEuiwHcMJ12dcsgbw8DSR62gnKlAEbOQyrVowMxAAF0wNnLqUBmvSeir438BGRORi1mCQO6zqq9VYlyeMf7hTfS0qgjUALE7Q5aN56FiexvUQgPnuGt1M4ZdOjStv2MiF2XqLafefAH6rCqwBDCakhaMicrVT44JKoG1zIq0aaP31yYRMa5/Ws+okJ9NGw05/WBrjupvkRVcmoqsWbu52/HqbsNkHYCOAiTbuRgBMqstqtDCuCQArNAzXUuhsjKluzQEROWk87cqUH7PcY6PnqbfJnPYB+DClZJsAXlXpxs5dRQBGAHwV5LfTHTUAV115KS5CZw8FemoF4215jF9PUV+NUri/GMCAC7PiJAQAB9RTRBmkRN8ibQurNdM4TUuT5FIAs1yGZefLWiqaVB8bVyHcrgr0y6z3pKaGHUeuVJLNGLlWJ1z/VaVaCx9rG/UTVYU4F1hXI+h1sGHkOpQlLWylKuZn6zlkWtTJYVgjsJlCJvejP34pgEcBXBKRPRqgJK9e7BuuGedd12mNWpjuZtZM1td2kjdcYNilkTS3htwnAaydv20HGozzroP07dJdJHuibqcxCrI84WPD7byOG6cXwJuqLk39jkXG5wE8m4c3uAvA0gQjOpJhnLn68l0dcYlPX5TDzGCZW3gTGleqGoE+nSsAzroMjjpGU6V9LA/j2hbkAaZnx0jOzqizLyZkXx/l1Zf9IsG4vsyy4MGNt5Xkfu31niL5gS1B6WYtFkj2kDyckGm9l3V1hhs3Ivkgybl5hFsLBv2YWizWKtMazjzolPO3sHw2XPtV77JGMABgXotM62bWVqcDNncoYZrYLazNZJs6lsGOATjt0szMEm71I6MuC8aDAbxdP2iZVhElyk4yrXmuui3BeW83Bbg8k28DsFWY3uAs2owWMdGLumx1zgpandBZwRgKbAN1Ars6QXrjeU1j8oA1V/J0gnEdVX9Zz7tOFWUNsQpyn2t1RgH090VItRPJen1tBMGgppWbw1WBRdCab7Xu5WzVYJOm3SdE5Nq0Vb8ZhI01bq9JmHaPBMlMObCuvN6Pqb7BdJGLZftZA1oLYE4QDGoA/nEFDVYlKKxNaHCMFWlcWWHjNuteRkVkoptuTC6wrsfQ2yLTQtA9lKIXN6bV14UtpjHSQY2gUFj73HoAvUH3MAJwo5t1BHnD0sG2as0fAfB72hXGRcNaMFiZEAz2q1FFpaqBC50NTNVMWy0lOYgZOKKMKzb73PdMkrcdLMuGtc9s0L+bgb6OAjhRtL6mhTWATQlG97WITBaVvHRS02rofi2/KSLW7SdPpN0UUfi+GK33bwp2blil8MeuKnx5q4F6ghdcydwfO7QWVbpUbUvePO26WFnTpLrb9nkB1dka9ZoDtU1nN0k+XhVdFdXFXm3Lx8E2vreqtI2vR8/vu2q2Pf4dpYK6Dl/NPf7N2um75RoR2yvx6AP4rSQvO8iLJF/3myfLhLuX5ADJV7T1SLcT7lOSi6sCuoDkCMl/FfA6ye90x/GS0DuUeYhu1lmvTv8vAOdE5HLYnyo6SUlz/AcDV4xWM7XlRAAAAABJRU5ErkJggg==);
   --new:#a371f7; --off:#f25555; --low:#f5b83d; --accent:#9fd400;
 }
 *{box-sizing:border-box}
@@ -18,7 +19,7 @@ html,body{margin:0;height:100%;font:13px/1.45 "Inter",system-ui,-apple-system,"S
 #side{width:400px;min-width:400px;height:100%;overflow-y:auto;background:var(--panel);border-right:1px solid var(--line);scrollbar-color:#2a3446 transparent}
 #map{flex:1;height:100%;background:#0b0f17}
 header{display:flex;gap:12px;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(17,23,34,.92);backdrop-filter:blur(8px);z-index:5}
-.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#c4ec1c,#7fb800);color:#0b0f17;font-weight:900;font-size:20px;display:grid;place-items:center;flex:none;box-shadow:0 0 18px rgba(170,213,0,.35)}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--fala-bg) var(--flogo) center/auto 74% no-repeat;font-size:0;display:grid;place-items:center;flex:none;box-shadow:0 0 18px rgba(194,209,0,.35)}
 h1{font-size:15px;margin:0;font-weight:650;letter-spacing:-.01em}
 #meta{margin:2px 0 0;color:var(--muted);font-size:11.5px}
 section{padding:14px 18px;border-bottom:1px solid var(--line)}
@@ -58,18 +59,19 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 tr.click{cursor:pointer}
 tr.click:hover{background:#18202e}
 .st{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10.5px;font-weight:600;white-space:nowrap}
-.st-ok{background:rgba(170,213,0,.14);color:#c4ec1c}.st-low{background:rgba(245,184,61,.15);color:#f5c45e}.st-off{background:rgba(242,85,85,.15);color:#ff8080}
+.st-ok{background:rgba(194,209,0,.14);color:#c4ec1c}.st-low{background:rgba(245,184,61,.15);color:#f5c45e}.st-off{background:rgba(242,85,85,.15);color:#ff8080}
 .st-new{background:rgba(163,113,247,.16);color:#c9a8ff}.st-man{background:rgba(163,113,247,.1);color:#c9a8ff;border:1px dashed var(--new)}
 .up{color:#9fd400}.dn{color:#ff7070}
 .note{color:var(--muted);font-size:11.5px;margin:8px 0 0}
 .warn{background:rgba(245,184,61,.1);border:1px solid rgba(245,184,61,.25);color:#f5d08a;border-radius:8px;padding:7px 9px;font-size:11.5px;margin-top:8px}
 #busy{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--new);color:#fff;padding:6px 16px;border-radius:16px;z-index:2000;display:none;box-shadow:0 4px 18px rgba(163,113,247,.45)}
 /* marcadores */
-.pin{display:grid;place-items:center;border-radius:50%;font-weight:900;color:#0b0f17;box-shadow:0 0 0 2px #0b0f17,0 0 14px rgba(170,213,0,.55);border:2px solid #e9ffb0}
-.pin-ok{background:var(--fala-bg)}
-.pin-low{background:var(--fala-bg);border:3px solid var(--low);box-shadow:0 0 0 2px #0b0f17,0 0 14px rgba(245,184,61,.6)}
+.pin{display:grid;place-items:center;border-radius:50%;font-weight:900;color:#0b0f17;box-shadow:0 0 0 2px #0b0f17,0 0 14px rgba(194,209,0,.55);border:2px solid #e9ffb0}
+.pin-ok,.pin-low,.pin-na{background-image:var(--flogo);background-repeat:no-repeat;background-position:center;background-size:auto 76%}
+.pin-ok{background-color:var(--fala-bg)}
+.pin-low{background-color:var(--fala-bg);border:3px solid var(--low);box-shadow:0 0 0 2px #0b0f17,0 0 14px rgba(245,184,61,.6)}
 .pin-off{background:var(--off);color:#fff;border-color:#ffc2c2;box-shadow:0 0 0 2px #0b0f17,0 0 14px rgba(242,85,85,.6)}
-.pin-na{background:#5b6578;color:#e6eaf2;border-color:#8b95a7;box-shadow:none}
+.pin-na{background-color:#5b6578;color:#e6eaf2;border-color:#8b95a7;box-shadow:none}
 .pin-new{background:var(--new);color:#fff;border-radius:6px;transform:rotate(45deg);border-color:#e2d1ff;box-shadow:0 0 0 2px #0b0f17,0 0 16px rgba(163,113,247,.7)}
 .pin-new i{transform:rotate(-45deg);font-style:normal}
 .pin-man{background:#0b0f17;color:#c9a8ff;border:3px dashed var(--new);border-radius:6px;box-shadow:0 0 14px rgba(163,113,247,.6)}
@@ -148,14 +150,14 @@ tr.click:hover{background:#18202e}
 <body>
 <div id="busy">Calculando…</div>
 <nav id="nav">
-  <div class="brand"><div class="logo">F</div>Red Puntos Colab</div>
+  <div class="brand"><div class="logo"></div>Red Puntos Colab</div>
   <button class="tab act" data-tab="map">Mapa</button>
   <button class="tab" data-tab="dash">Distancia sellers</button>
 </nav>
 <div id="app">
 <aside id="side">
   <header>
-    <div class="logo">F</div>
+    <div class="logo"></div>
     <div><h1>Evaluador de puntos dropoff</h1><p id="meta"></p></div>
   </header>
 
@@ -285,8 +287,8 @@ legend.onAdd=()=>{const d=L.DomUtil.create('div','legend');d.innerHTML=
  `<div><span class="sw" style="background:var(--colab)"></span>Seller Punto Colab</div>
   <div><span class="sw" style="background:var(--ooll)"></span>Seller OOLL</div>
   <div><span class="sw" style="background:transparent;border:2px solid #8b95a7"></span>Seller sin cobertura (claro)</div>
-  <div><span class="sw" style="background:var(--fala-bg)"></span>Punto colab ≥ mínimo</div>
-  <div><span class="sw" style="background:var(--fala-bg);border:3px solid var(--low)"></span>Punto bajo mínimo hoy</div>
+  <div><span class="sw" style="background:var(--fala-bg) var(--flogo) center/auto 70% no-repeat"></span>Punto colab ≥ mínimo</div>
+  <div><span class="sw" style="background:var(--fala-bg) var(--flogo) center/auto 70% no-repeat;border:3px solid var(--low)"></span>Punto bajo mínimo hoy</div>
   <div><span class="sw" style="background:var(--off)"></span>Punto a deshabilitar</div>
   <div><span class="sw" style="background:var(--new);border-radius:3px"></span>Punto potencial nuevo</div>
   <div><span class="sw" style="background:transparent;border:2px dashed var(--new);border-radius:3px"></span>Punto manual</div>`;return d};
@@ -418,7 +420,7 @@ function iconFor(j){
   if(st.k==='new')return L.divIcon({className:'',html:`<div class="pin pin-new" style="width:26px;height:26px;font-size:11px"><i>${esc(p.id.slice(1))}</i></div>`,iconSize:[26,26],iconAnchor:[13,13]});
   if(st.k==='man')return L.divIcon({className:'',html:`<div class="pin pin-man" style="width:26px;height:26px;font-size:11px">${esc(p.id)}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
   const cls=st.k==='off'?'pin-off':st.k==='low'?'pin-low':'pin-ok';
-  return L.divIcon({className:'',html:`<div class="pin ${cls}" style="width:30px;height:30px;font-size:16px">${st.k==='off'?'✕':'F'}</div>`,iconSize:[30,30],iconAnchor:[15,15]});
+  return L.divIcon({className:'',html:`<div class="pin ${cls}" style="width:30px;height:30px;font-size:16px">${st.k==='off'?'✕':''}</div>`,iconSize:[30,30],iconAnchor:[15,15]});
 }
 
 /* ---------- render ---------- */
@@ -438,7 +440,7 @@ function render(){
     m.on('click',()=>{select(j);L.popup({maxWidth:340}).setLatLng([p.lat,p.lon]).setContent(pointPopup(j)).openOn(map)});
     m.addTo(ptLayer);
   });
-  if($('chkNA').checked) NA.forEach(p=>L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:'<div class="pin pin-na" style="width:22px;height:22px;font-size:11px">F</div>',iconSize:[22,22],iconAnchor:[11,11]})})
+  if($('chkNA').checked) NA.forEach(p=>L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:'<div class="pin pin-na" style="width:22px;height:22px;font-size:11px"></div>',iconSize:[22,22],iconAnchor:[11,11]})})
     .bindPopup(`<div class="pp"><h3>${esc(p.id)} · ${esc(p.n)}</h3>${esc(p.d)}, ${esc(p.c)}<br><b>${esc(p.act)}</b> — no se considera en los cálculos</div>`).addTo(ptLayer));
   drawLines();
   renderKpis();renderClosures();renderTable();
@@ -738,7 +740,7 @@ if(__DATA)startApp(__DATA);
 </script>
 <!-- Capa web: login Firebase + administración. preparar_datos.py la inserta antes de </body> en web/index.html -->
 <style>
-#gate{position:fixed;inset:0;z-index:5000;background:radial-gradient(1200px 600px at 70% -10%,rgba(170,213,0,.10),transparent),var(--bg);display:grid;place-items:center;padding:16px}
+#gate{position:fixed;inset:0;z-index:5000;background:radial-gradient(1200px 600px at 70% -10%,rgba(194,209,0,.10),transparent),var(--bg);display:grid;place-items:center;padding:16px}
 .gbox{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .gbox .logo{margin-bottom:14px}
 .gbox h2{font-size:18px;text-transform:none;letter-spacing:0;color:var(--ink);margin:0 0 4px}
@@ -764,7 +766,7 @@ if(__DATA)startApp(__DATA);
 </style>
 
 <div id="gate"><div class="gbox" id="gBox">
-  <div class="logo">F</div>
+  <div class="logo"></div>
   <h2>Red Puntos Colab</h2>
   <p>Cargando…</p>
 </div></div>
@@ -800,7 +802,7 @@ const OWNER = "tmontes30@gmail.com";
 const CHUNK = 800;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const box = html => { $("gBox").innerHTML = `<div class="logo">F</div>${html}`; };
+const box = html => { $("gBox").innerHTML = `<div class="logo"></div>${html}`; };
 
 if (!CONFIG) { box(`<h2>Falta configurar Firebase</h2><p>Esta página no tiene la configuración del proyecto.</p>`); throw new Error("sin config"); }
 const app = initializeApp(CONFIG);
